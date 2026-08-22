@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0c10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Faustball</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div class="huelle">
+
+  <header class="topbar">
+    <span class="app-marke">Faustball</span>
+    <button id="zahnrad" class="icon-btn" data-ziel="einstellungen" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.7M12 18.8v2.7M4.6 4.6l1.9 1.9M17.5 17.5l1.9 1.9M2.5 12h2.7M18.8 12h2.7M4.6 19.4l1.9-1.9M17.5 6.5l1.9-1.9"/></svg>
+    </button>
+  </header>
+
+  <main id="app"></main>
+
+  <nav class="nav" aria-label="Hauptnavigation">
+    <button class="nav-btn" data-ziel="heute">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.2 2.4 2.4 4.8-5.2"/></svg>
+      <span>Heute</span>
+    </button>
+    <button class="nav-btn" data-ziel="woche">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.8h17M8.3 3.2v3.4M15.7 3.2v3.4"/></svg>
+      <span>Woche</span>
+    </button>
+    <button class="nav-btn" data-ziel="habits">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 20v-4.2M9.8 20V9.5M15.1 20v-6.8M20.4 20V4.5"/></svg>
+      <span>Habits</span>
+    </button>
+    <button class="nav-btn" data-ziel="journal">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 4.2h10.8a3 3 0 0 1 3 3v12.6H8.5a3 3 0 0 1-3-3z"/><path d="M9.3 9.2h6.2M9.3 13.2h4"/></svg>
+      <span>Journal</span>
+    </button>
+    <button class="nav-btn" data-ziel="ziel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.3"/><circle cx="12" cy="12" r="3.9"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+      <span>Ziel</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- Neue Fassung wartet — übernimmt erst auf Tippen -->
+<button id="update-balken" class="update-balken">
+  <span class="ub-text">Neue Version verfügbar — tippen zum Aktualisieren.</span>
+</button>
+
+<!-- Countdown für Übungen mit Zeitangabe -->
+<div id="timer" class="timer-overlay" role="dialog" aria-modal="true" aria-label="Timer">
+  <div class="timer-box">
+    <p id="timer-name" class="timer-name"></p>
+    <p id="timer-zahl" class="timer-zahl">0</p>
+    <p class="timer-sub">Sekunden</p>
+    <button class="btn" data-action="timer-stop">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Reihenfolge zählt: plan → store → habits → app -->
+<script src="./js/plan.js"></script>
+<script src="./js/store.js"></script>
+<script src="./js/habits.js"></script>
+<script src="./js/app.js"></script>
+
+</body>
+</html>

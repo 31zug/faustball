@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Editoren
+.vscode/
+.idea/
+*.swp
+*~
+
+# Werkzeuge
+.claude/
+node_modules/
+
+# Deine Datensicherungen gehören nicht ins Repo.
+# Der Export enthält Journal, Schlafdaten und Trainerfeedback —
+# und ein GitHub-Pages-Repo ist öffentlich lesbar.
+faustball-*.json
+*.backup.json
