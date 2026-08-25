@@ -1832,12 +1832,23 @@
   /* --- Anleitung zu einem Habit --------------------------------
      Aufklappbare Übungsliste. Im Notfallmodus bleiben nur die unter
      "minimal" aufgeführten Übungen stehen. */
+  /* Ist heute ein Tag, an dem diese Anleitung Pflicht ist?
+     Dann wird auch im Notfallmodus nicht gekürzt. */
+  function istPflichtTag(liste, iso) {
+    if (!liste || !liste.length) return false;
+    const plan = tagesPlan(iso);
+    if (liste.indexOf('spieltag') >= 0 && plan.typ === 'spieltag') return true;
+    if (liste.indexOf('explosiv') >= 0 && istExplosiv(plan)) return true;
+    return false;
+  }
+
   function habitAnleitung(h, iso) {
     const a = h.anleitung;
     if (!a || !a.uebungen || !a.uebungen.length) return '';
 
     const offen = habitOffen.has(h.id);
-    const kurz = notfallAn(iso) && a.minimal && a.minimal.length;
+    const pflichtHeute = istPflichtTag(a.pflichtTage, iso);
+    const kurz = !pflichtHeute && notfallAn(iso) && a.minimal && a.minimal.length;
     const liste = kurz
       ? a.uebungen.filter(u => a.minimal.indexOf(u.id) >= 0)
       : a.uebungen;
@@ -1853,6 +1864,9 @@
         : leseZeile(u, i, kurz, istMinimal(u))).join('');
 
       inhalt = '<div class="an-inhalt">' +
+        (pflichtHeute
+          ? '<p class="an-pflicht">Heute Pflicht — vollständig, nicht gekürzt.</p>'
+          : '') +
         (a.regel ? '<p class="an-regel">' + esc(a.regel) + '</p>' : '') +
         (kurz ? '<p class="an-kurz">Minimalversion — ' + esc(h.notfall || 'gekürzt') + '</p>' : '') +
         '<ol class="an-liste">' + zeilen + '</ol>' +
@@ -1866,7 +1880,8 @@
       '<span class="an-titel">Anleitung' +
       '<span class="an-anzahl">' +
       (a.abhakbar ? fertig + ' von ' + liste.length + ' erledigt' : liste.length + ' Übungen') +
-      (kurz ? '' : (a.dauer ? ' · ' + esc(a.dauer) : '')) + '</span></span>' +
+      (kurz ? '' : (a.dauer ? ' · ' + esc(a.dauer) : '')) +
+      (pflichtHeute ? ' · heute Pflicht' : '') + '</span></span>' +
       '<span class="chev' + (offen ? ' chev-auf' : '') + '" aria-hidden="true"></span>' +
       '</button>' + inhalt + '</div>';
   }

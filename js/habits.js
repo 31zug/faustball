@@ -140,71 +140,73 @@ const FB_HABITS = {
       hinweis: 'Sprunggelenk und Brustwirbelsäule sind das, was dich in der tiefen ' +
                'Abwehrposition zuerst limitiert.',
       notfall: '2 Minuten statt 5',
-      // Die Reihenfolge ist bewusst: erst Sprunggelenk, dann Hüfte, dann BWS.
-      // "minimal" listet die IDs, die im Notfallmodus stehen bleiben.
       anleitung: {
         dauer: '5 Min',
-        minimal: ['mob-knie', 'mob-bws'],
-        hinweis: 'Abends nach dem Duschen. Nicht direkt vor dem Sprungtraining — vor ' +
-                 'Explosivem willst du aufwärmen, nicht dehnen. Ausser der Hocke wird ' +
-                 'nichts gehalten, alles bleibt in Bewegung. Ziehen ist in Ordnung, ' +
-                 'Stechen nicht.',
+        abhakbar: true,
+        // Reihenfolge von unten nach oben: Sprunggelenk, Hüfte, Rumpf,
+        // Schulter — zum Schluss das Beinpendel als fliessender Abschluss.
+        regel: 'Mobilität ist in Bewegung — nichts halten. Fliessend und kontrolliert.',
+        // An Spieltagen und am Explosivtag Pflicht: dann wird auch im
+        // Notfallmodus nicht gekürzt.
+        pflichtTage: ['spieltag', 'explosiv'],
+        minimal: ['mob-knie', 'mob-katzekuh'],
+        hinweis: 'Gehört vor das Training, nicht danach. Das Gegenstück für ' +
+                 'nachher ist das Abenddehnen — das ist statisch, das hier nicht.',
         uebungen: [
           {
             id: 'mob-knie',
             bereich: 'Sprunggelenk',
-            name: 'Knie zur Wand',
-            menge: '10× pro Seite',
-            hinweis: 'Fuss eine Handbreit vor die Wand. Knie nach vorne über die Zehen ' +
-                     'zur Wand schieben, Ferse bleibt am Boden. Berührt das Knie die ' +
-                     'Wand, den Fuss einen Zentimeter weiter weg. Hebt die Ferse ab, ' +
-                     'näher ran.',
+            name: 'Sprunggelenk an der Wand',
+            menge: '10 pro Seite',
+            hinweis: 'Fuss ca. 10 cm vor der Wand, Knie über die Zehen nach vorne ' +
+                     'schieben, Ferse bleibt am Boden.',
             warum: 'Ein steifes Sprunggelenk ist der Grund, warum du in der tiefen ' +
-                   'Abwehr nicht runterkommst — du kippst nach hinten statt nach vorne ' +
-                   'über den Fuss.'
+                   'Abwehr nicht runterkommst.'
           },
           {
-            id: 'mob-hocke',
-            bereich: 'Hüfte + Sprunggelenk',
-            name: 'Tiefe Hocke halten',
-            menge: '60 Sek',
-            hinweis: 'So tief wie es geht, Fersen am Boden, Ellbogen innen an den Knien ' +
-                     'und die Knie leicht nach aussen drücken. Gehen die Fersen hoch: ' +
-                     'Absatz auf ein dünnes Buch. Lässt sich auch in 3 × 20 Sek aufteilen.',
-            warum: ''
-          },
-          {
-            id: 'mob-9090',
+            id: 'mob-hueftkreisen',
             bereich: 'Hüfte',
-            name: '90/90 Hüftwechsel',
-            menge: '10 Wechsel',
-            hinweis: 'Am Boden sitzen, beide Beine 90 Grad angewinkelt — ein Bein vorne, ' +
-                     'eins seitlich hinten. Langsam auf die andere Seite kippen, ohne ' +
-                     'die Hände zu benutzen.',
-            warum: 'Genau die Rotation, die du beim Zuspiel unter dem Ball brauchst.'
-          },
-          {
-            id: 'mob-bws',
-            bereich: 'BWS',
-            name: 'Vierfüssler-Rotation',
-            menge: '8× pro Seite',
-            hinweis: 'Im Vierfüsslerstand, eine Hand an den Hinterkopf. Ellbogen erst ' +
-                     'Richtung Boden unter den Körper, dann aufdrehen und Ellbogen zur ' +
-                     'Decke. Der Blick folgt dem Ellbogen. Die Hüfte bleibt ruhig — die ' +
-                     'Bewegung kommt aus dem Brustkorb, nicht aus dem Becken.',
-            warum: 'Steife Brustwirbelsäule heisst: Der Arm kommt beim Zuspiel nicht ' +
-                   'sauber über den Kopf, und die Schulter muss ausgleichen. Das ist ' +
-                   'der Weg in Schulterprobleme.'
+            name: 'Hüftkreisen im Vierfüsslerstand',
+            menge: '8 pro Seite',
+            hinweis: 'Knie anheben, grosse Kreise vorwärts und rückwärts, ' +
+                     'Rücken ruhig.',
+            warum: ''
           },
           {
             id: 'mob-ausfall',
             bereich: 'Hüfte + BWS',
             name: 'Ausfallschritt mit Rotation',
-            menge: '5× pro Seite',
-            hinweis: 'Weiter Ausfallschritt, hinteres Bein gestreckt. Gleichseitigen ' +
-                     'Ellbogen neben den vorderen Fuss zum Boden, dann den Arm aufdrehen ' +
-                     'und zur Decke strecken.',
-            warum: 'Der beste Einzelwert, wenn du wirklich nur eine Übung machst.'
+            menge: '6 pro Seite',
+            hinweis: 'Im Ausfallschritt Oberkörper zum vorderen Bein drehen, ' +
+                     'Arm nach oben öffnen.',
+            warum: ''
+          },
+          {
+            id: 'mob-katzekuh',
+            bereich: 'BWS',
+            name: 'Katze-Kuh',
+            menge: '10 Wdh',
+            hinweis: 'Rücken abwechselnd rund und lang, mit der Atmung.',
+            warum: 'Eine steife Brustwirbelsäule zwingt die Schulter beim Zuspiel ' +
+                   'über Kopf zum Ausgleichen.'
+          },
+          {
+            id: 'mob-schulterkreisen',
+            bereich: 'Schulter',
+            name: 'Schulterkreisen mit Handtuch',
+            menge: '8 Wdh',
+            hinweis: 'Gestreckte Arme von vorne über den Kopf nach hinten. Griff so ' +
+                     'weit fassen, dass es ohne Ausweichen geht.',
+            warum: ''
+          },
+          {
+            id: 'mob-beinpendel',
+            bereich: 'Hüfte',
+            name: 'Beinpendel',
+            menge: '10 pro Seite je Richtung',
+            hinweis: 'An der Wand abstützen, Bein vor und zurück, dann seitlich. ' +
+                     'Fliessend, ohne Kraft.',
+            warum: ''
           }
         ]
       }

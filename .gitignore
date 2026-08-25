@@ -23,3 +23,4 @@ node_modules/
 # und ein GitHub-Pages-Repo ist öffentlich lesbar.
 faustball-*.json
 *.backup.json
+faustball-app-spec.md

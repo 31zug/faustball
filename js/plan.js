@@ -50,9 +50,16 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.3',
+  appVersion: '2.4',
 
   neuerungen: [
+    {
+      version: '2.4',
+      punkte: [
+        'Mobilität ist jetzt eine abhakbare Liste mit sechs Übungen, von unten nach oben',
+        'An Spieltagen und am Explosivtag ist sie Pflicht und wird nicht gekürzt'
+      ]
+    },
     {
       version: '2.3',
       punkte: [

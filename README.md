@@ -627,6 +627,17 @@ durchnummeriert, weil die Abfolge bei einer Routine eine Rolle spielt.
 Im Notfallmodus zeigt die Anleitung nur noch die unter `minimal` genannten
 Übungen. Ohne `minimal` bleibt sie unverändert.
 
+Mit `pflichtTage` wird die Kürzung an bestimmten Tagen ausgesetzt:
+
+```js
+pflichtTage: ['spieltag', 'explosiv']
+```
+
+An diesen Tagen steht die volle Liste, auch wenn der Notfallmodus an ist —
+plus der Hinweis «Heute Pflicht — vollständig, nicht gekürzt.» Bei der
+Mobilität ist das so gesetzt: Vor einem Spiel und vor dem Explosivtag wird
+nicht gekürzt.
+
 ### Abhakbare Anleitung mit Timer
 
 Mit `abhakbar: true` wird aus der Leseliste eine Arbeitsliste: Jede Übung
@@ -660,7 +671,7 @@ gedacht und erscheint als oranger Kasten statt als stiller Zusatztext.
 
 | Habit | Inhalt | |
 |---|---|---|
-| **Mobilität** | 5 Übungen, Sprunggelenk → Hüfte → BWS | lesen |
+| **Mobilität** | 6 Übungen, von unten nach oben | abhakbar, an Spieltagen Pflicht |
 | **Abenddehnen** | 8 Dehnübungen, Hüfte bis Unterarme | abhakbar, mit Timer |
 | **Ballkontakte** | Zuspiele, Hochhalten, tiefe Annahme — plus Variante ohne Wand | lesen |
 | **Meditation** | Ankommen, 4 ein / 6 aus, Zurückholen | lesen |
