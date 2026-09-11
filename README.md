@@ -309,9 +309,14 @@ auseinander wie möglich. Samstag und Sonntag bleiben dem Wochenende vorbehalten
 
 **Der Freitag wird nur freigeräumt, wenn ein Termin am Wochenende steht.** Dann
 macht die Terminlogik daraus die Aktivierung vor dem Spiel. In spielfreien Wochen
-bleibt er ein normaler Trainingstag — der freie Tag rutscht dafür in die
-Wochenmitte. Steht der Termin erst am Sonntag, bleibt der Freitag ebenfalls
-stehen und der Samstag wird zur Aktivierung.
+bleibt er ein normaler Trainingstag. Steht der Termin erst am Sonntag, bleibt der
+Freitag ebenfalls stehen und der Samstag wird zur Aktivierung.
+
+Ohne Wochenendtermin liegt der Explosivtag am Samstag, für die Woche bleiben also
+nur zwei Einheiten und drei freie Wochentage. Einer davon bekommt keine Einheit —
+seit Version 2.5 der Mittwoch statt des Freitags. Die Anzahl Trainingstage ändert
+sich dadurch nicht. **Ruhetag ist und bleibt der Sonntag**, ein Wochentag ohne
+Zusatzeinheit ist kein zweiter Ruhetag.
 
 Bleiben zu wenige freie Tage, fällt die letzte Einheit aus der Liste weg. Die App
 sagt das an, statt es still zu tun. Die Reihenfolge in `plan.js` unter `einheiten`

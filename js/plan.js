@@ -59,7 +59,7 @@ const FB_PLAN = {
         'Der Freitag bleibt in spielfreien Wochen ein normaler Trainingstag',
         'Freigeräumt wird er nur noch, wenn am Samstag ein Termin steht — ' +
           'dann ist er die Aktivierung',
-        'Der freie Wochentag rutscht dafür in die Wochenmitte'
+        'Der Wochentag ohne Zusatzeinheit ist dafür der Mittwoch — Ruhetag bleibt der Sonntag'
       ]
     },
     {
