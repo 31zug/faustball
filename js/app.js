@@ -141,10 +141,14 @@
     return treffer ? Number(treffer) : null;
   }
 
-  /* Verteilt die Wochentags-Einheiten. Liegt der Explosivtag am
-     Samstag, bleiben nur Kraft und Technik für Mo–Fr — und der
-     Samstag zählt beim Abstand mit, damit die Technik nicht direkt
-     davor landet. */
+  /* Verteilt die Wochentags-Einheiten auf Mo–Fr. Liegt der Explosivtag
+     am Samstag, bleiben für die Woche nur Kraft und Technik übrig.
+
+     Der Samstag zählt beim Abstand bewusst NICHT mit. Täte er das,
+     würde die Technik von ihm weggedrückt und der Freitag bliebe leer —
+     auch in spielfreien Wochen. Freigeräumt wird der Freitag nur, wenn
+     ein Termin am Wochenende steht: dann macht die Terminlogik daraus
+     eine Aktivierung. */
   function verteilung(iso) {
     const datum = iso || heute();
     const amSamstag = explosivAmSamstag(datum);
@@ -156,7 +160,6 @@
     const einheiten = amSamstag
       ? P.einheiten.filter(e => e.id !== 'explosiv')
       : P.einheiten.slice();
-    const belegt = amSamstag ? [6] : [];
 
     const frei = [];
     for (let wt = 1; wt <= 5; wt++) {
@@ -170,7 +173,7 @@
       let beste = null, besterWert = -1;
       const waehle = (ab, gewaehlt) => {
         if (gewaehlt.length === anzahl) {
-          const alle = gewaehlt.concat(belegt).sort((a, b) => a - b);
+          const alle = gewaehlt.slice().sort((a, b) => a - b);
           let min = 99;
           for (let i = 1; i < alle.length; i++) {
             min = Math.min(min, alle[i] - alle[i - 1]);
@@ -1348,7 +1351,7 @@
             (t.ort ? '<span class="tm-mini-ort">' + esc(t.ort) + '</span>' : '') +
             '</li>').join('') + '</ul>'
         : '<p class="notiz">Kein Termin. Die Woche läuft nach dem Standardplan, ' +
-          'Samstag mit Technik und Sprint.</p>') +
+          'Samstag ist der Explosivtag.</p>') +
       '<button class="gross-btn" data-action="nav" data-ziel="termine">Termine verwalten</button>' +
       '</section>');
 

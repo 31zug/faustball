@@ -303,9 +303,15 @@ auseinander wie möglich. Samstag und Sonntag bleiben dem Wochenende vorbehalten
 
 | Vereinstage | ohne Wochenendtermin | mit Wochenendtermin |
 |---|---|---|
-| Di, Do | Mo Kraft · Mi Technik · Sa Explosiv | Mo Kraft · Mi Explosiv · Fr Technik |
-| Mo, Mi | Di Kraft · Do Technik · Sa Explosiv | Di Kraft · Do Explosiv · Fr Technik |
+| Di, Do | Mo Kraft · Fr Technik · Sa Explosiv | Mo Kraft · Mi Explosiv · Fr Technik |
+| Mo, Mi | Di Kraft · Fr Technik · Sa Explosiv | Di Kraft · Do Explosiv · Fr Technik |
 | Di, Do, Fr | Mo Kraft · Mi Technik · Sa Explosiv | Mo Kraft · Mi Explosiv — Technik fällt weg |
+
+**Der Freitag wird nur freigeräumt, wenn ein Termin am Wochenende steht.** Dann
+macht die Terminlogik daraus die Aktivierung vor dem Spiel. In spielfreien Wochen
+bleibt er ein normaler Trainingstag — der freie Tag rutscht dafür in die
+Wochenmitte. Steht der Termin erst am Sonntag, bleibt der Freitag ebenfalls
+stehen und der Samstag wird zur Aktivierung.
 
 Bleiben zu wenige freie Tage, fällt die letzte Einheit aus der Liste weg. Die App
 sagt das an, statt es still zu tun. Die Reihenfolge in `plan.js` unter `einheiten`

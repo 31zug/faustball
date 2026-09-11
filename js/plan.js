@@ -50,9 +50,18 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.4',
+  appVersion: '2.5',
 
   neuerungen: [
+    {
+      version: '2.5',
+      punkte: [
+        'Der Freitag bleibt in spielfreien Wochen ein normaler Trainingstag',
+        'Freigeräumt wird er nur noch, wenn am Samstag ein Termin steht — ' +
+          'dann ist er die Aktivierung',
+        'Der freie Wochentag rutscht dafür in die Wochenmitte'
+      ]
+    },
     {
       version: '2.4',
       punkte: [
