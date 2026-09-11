@@ -141,17 +141,22 @@
     return treffer ? Number(treffer) : null;
   }
 
-  /* Verteilt die Wochentags-Einheiten auf Mo–Fr. Liegt der Explosivtag
-     am Samstag, bleiben für die Woche nur Kraft und Technik übrig.
+  /* Verteilt die Wochentags-Einheiten auf Mo–Fr.
 
-     Der Samstag zählt beim Abstand bewusst NICHT mit. Täte er das,
-     würde die Technik von ihm weggedrückt und der Freitag bliebe leer —
+     Ohne Termin am Wochenende liegt der Explosivtag am Samstag; für die
+     Woche bleiben Kraft, Technik-Ablauf und Technik-Präzision. Bei zwei
+     Vereinstagen füllen die drei genau Montag, Mittwoch und Freitag.
+
+     Der Samstag zählt beim Abstand NICHT mit. Täte er das, würde die
+     letzte Einheit von ihm weggedrückt und der Freitag bliebe leer —
      auch in spielfreien Wochen. Freigeräumt wird der Freitag nur, wenn
-     ein Termin am Wochenende steht: dann macht die Terminlogik daraus
-     eine Aktivierung. */
-  function verteilung(iso) {
+     ein Termin am Wochenende steht: dann wandert der Explosivtag unter
+     die Woche, die Präzisionseinheit fällt mangels Platz weg, und aus
+     dem Tag vor dem Termin macht die Terminlogik die Aktivierung. */
+  function verteilung(iso, amSamstagErzwingen) {
     const datum = iso || heute();
-    const amSamstag = explosivAmSamstag(datum);
+    const amSamstag = amSamstagErzwingen == null
+      ? explosivAmSamstag(datum) : amSamstagErzwingen;
     const schluessel = S.vereinTage().join(',') + '|' + (amSamstag ? 'sa' : 'wo');
     if (verteilungCache && verteilungCache.schluessel === schluessel) {
       return verteilungCache.karte;
@@ -195,11 +200,16 @@
     return karte;
   }
 
-  /* Einheiten, die mangels freier Tage wegfallen */
+  /* Einheiten, die wegen der Vereinstage dauerhaft keinen Platz finden.
+
+     Gerechnet wird immer die spielfreie Woche. In einer Terminwoche
+     wandert der Explosivtag unter die Woche und die hinterste Einheit
+     fällt planmässig weg — das ist gewollt und kein Problem der
+     Einstellungen, also wird dort auch nicht davor gewarnt. */
   function entfalleneEinheiten(iso) {
-    const karte = verteilung(iso);
+    const karte = verteilung(iso || heute(), true);
     const belegt = Object.keys(karte).map(k => karte[k].id);
-    if (explosivAmSamstag(iso || heute())) belegt.push('explosiv');
+    belegt.push('explosiv');
     return P.einheiten.filter(e => belegt.indexOf(e.id) < 0);
   }
 
@@ -228,12 +238,14 @@
                hinweis: 'Kein Training geplant. Der freie Tag ist Teil des Plans.' };
     }
 
-    // Der Ballsamstag wandert auf den Techniktag, wenn der Samstag
-    // der Explosivtag ist und der Partner kann.
-    if (e.id === 'technik' && amSamstag && S.partnerDa(datum)) {
+    // Der Ballsamstag wandert auf den Ablauftag, wenn der Samstag der
+    // Explosivtag ist und der Partner kann. Bewusst der Ablauftag und
+    // nicht der Präzisionstag: Volumen und echtes Timing gewinnen am
+    // meisten durch einen Partner, die gezählte Wandarbeit gar nicht.
+    if (e.id === 'technik-ablauf' && amSamstag && S.partnerDa(datum)) {
       return Object.assign({}, P.ballsession, { partnerModus: true, mitPartner: true });
     }
-    if (e.id === 'technik' && amSamstag) {
+    if (e.id === 'technik-ablauf' && amSamstag) {
       return Object.assign({}, e, { partnerModus: true, mitPartner: false });
     }
     return e;
@@ -1126,7 +1138,9 @@
       '<p class="kopf-meta">' +
       (t && t.zeit ? '<span class="meta-termin">' + esc(t.zeit) + '</span>' : '') +
       (t && t.ort ? '<span class="meta-termin">' + esc(t.ort) + '</span>' : '') +
-      (!t && zeit ? '<span>' + esc(zeit) + '</span>' : '') +
+      // An freien Tagen keine Trainingszeit anzeigen — die Zeit hängt am
+      // Wochentag, nicht daran, ob überhaupt etwas ansteht.
+      (!t && zeit && plan.typ !== 'frei' ? '<span>' + esc(zeit) + '</span>' : '') +
       (plan.dauerMin ? '<span>' + plan.dauerMin + ' Min</span>' : '') +
       (istHart(iso, plan) ? '<span class="meta-hart">harter Tag' +
         (t && t.typ === 'turnier' ? ' ×2' : '') + '</span>' : '') +

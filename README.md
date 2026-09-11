@@ -297,35 +297,39 @@ erscheint gar nicht erst.
 Unter *Einstellungen → Vereinstraining*, sieben Knöpfe für die Wochentage.
 Standard ist Dienstag und Donnerstag.
 
-Die Zusatzeinheiten — Kraft, Explosiv, Technik — verteilen sich
-**automatisch** auf die übrigen Tage von Montag bis Freitag, und zwar so weit
-auseinander wie möglich. Samstag und Sonntag bleiben dem Wochenende vorbehalten.
+Die Zusatzeinheiten — Kraft, Explosiv, Technik-Ablauf, Technik-Präzision —
+verteilen sich **automatisch** auf die übrigen Tage von Montag bis Freitag, und
+zwar so weit auseinander wie möglich. Samstag und Sonntag bleiben dem Wochenende
+vorbehalten.
 
 | Vereinstage | ohne Wochenendtermin | mit Wochenendtermin |
 |---|---|---|
-| Di, Do | Mo Kraft · Fr Technik · Sa Explosiv | Mo Kraft · Mi Explosiv · Fr Technik |
-| Mo, Mi | Di Kraft · Fr Technik · Sa Explosiv | Di Kraft · Do Explosiv · Fr Technik |
-| Di, Do, Fr | Mo Kraft · Mi Technik · Sa Explosiv | Mo Kraft · Mi Explosiv — Technik fällt weg |
+| Di, Do | Mo Kraft · Mi Ablauf · Fr Präzision · Sa Explosiv | Mo Kraft · Mi Explosiv · Fr Ablauf — Präzision fällt weg |
+| Mo, Mi | Di Kraft · Do Ablauf · Fr Präzision · Sa Explosiv | Di Kraft · Do Explosiv · Fr Ablauf — Präzision fällt weg |
+| Di, Do, Fr | Mo Kraft · Mi Ablauf · Sa Explosiv — Präzision fällt weg | Mo Kraft · Mi Explosiv — Präzision fällt weg |
 
-**Der Freitag wird nur freigeräumt, wenn ein Termin am Wochenende steht.** Dann
-macht die Terminlogik daraus die Aktivierung vor dem Spiel. In spielfreien Wochen
-bleibt er ein normaler Trainingstag. Steht der Termin erst am Sonntag, bleibt der
-Freitag ebenfalls stehen und der Samstag wird zur Aktivierung.
+**Der Freitag entfällt nur, wenn ein Termin am Samstag oder Sonntag eingetragen
+ist.** Dann wandert der Explosivtag unter die Woche, die Präzisionseinheit findet
+keinen Platz mehr, und aus dem Tag vor dem Termin macht die Terminlogik die
+Aktivierung — bei einem Spiel am Samstag also aus dem Freitag, bei einem Turnier
+am Sonntag aus dem Samstag. Ohne Termin am Wochenende bleibt der Freitag
+regulärer Techniktag.
 
-Ohne Wochenendtermin liegt der Explosivtag am Samstag, für die Woche bleiben also
-nur zwei Einheiten und drei freie Wochentage. Einer davon bekommt keine Einheit —
-seit Version 2.5 der Mittwoch statt des Freitags. Die Anzahl Trainingstage ändert
-sich dadurch nicht. **Ruhetag ist und bleibt der Sonntag**, ein Wochentag ohne
-Zusatzeinheit ist kein zweiter Ruhetag.
+**Ruhetag ist und bleibt der Sonntag.**
+
+Die Warnung «Zu wenige freie Tage» in den Einstellungen rechnet immer die
+spielfreie Woche. Dass in einer Terminwoche die Präzisionseinheit wegfällt, ist
+gewollt und wird darum nicht als Problem gemeldet.
 
 Bleiben zu wenige freie Tage, fällt die letzte Einheit aus der Liste weg. Die App
 sagt das an, statt es still zu tun. Die Reihenfolge in `plan.js` unter `einheiten`
-ist die Priorität — wer Technik wichtiger findet als den Explosivtag, tauscht die beiden
+ist die Priorität — sie lautet Kraft, Explosiv, Technik-Ablauf, Technik-Präzision.
+Wer lieber die Präzision behält und den Ablauftag opfert, tauscht die beiden
 Einträge.
 
 **Die Vier-Tage-Regel bleibt unverändert.** Vereinstraining und der Explosivtag
-zählen weiterhin als hart, egal auf welchem Wochentag sie liegen. Der Techniktag
-zählt nicht.
+zählen weiterhin als hart, egal auf welchem Wochentag sie liegen. Die beiden
+Techniktage zählen nicht — auch nicht zusammen.
 
 ## Position: Zuspiel/Abwehr oder Angriff
 
@@ -342,7 +346,7 @@ die Aufwärmroutine und die Grundkraft.
 | Mi, Sprungblock | Seitliche Sprünge nicht mehr Schlüsselübung · Countermovement Jumps hervorgehoben und auf 5 × 3 erhöht · neu Anlaufsprünge 4 × 4 und Depth Jumps 3 × 5 |
 | Mo, Rumpf | neu Holzhacker 3 × 10 und Pallof Press 3 × 12, je pro Seite |
 | Mo, Ziehen | wird zur **Pflicht** — die Übungen lassen sich nicht mehr überspringen |
-| Fr, Technik | Zuspiele 100 → 50 · Angaben 30 → 50 und nicht mehr optional · neu Schlagtechnik ohne Ball 3 × 10 |
+| Technik-Präzision | Wandzuspiele 60 → 30 · Angaben 30 → 50 · neu Schlagtechnik ohne Ball 3 × 10 |
 | Testtag | Countermovement Jump: Zwischenziel 45 cm statt 40 cm |
 | Wochenfokus | eigene Fragenliste |
 
@@ -374,9 +378,9 @@ Explosivtag liegt — anhand der eingetragenen Termine.
 
 | | Kein Termin am Wochenende | Termin am Wochenende |
 |---|---|---|
-| **Samstag** | **Explosivtag** | Aktivierung |
-| Wochenmitte | Technik oder Ballsession | **Explosivtag** |
-| Freitag | frei | Technik |
+| **Samstag** | **Explosivtag** | Aktivierung oder Spiel |
+| Wochenmitte | Technik-Ablauf oder Ballsession | **Explosivtag** |
+| Freitag | Technik-Präzision | Aktivierung, wenn der Termin am Samstag ist |
 | Sonntag | frei | frei oder Spiel |
 
 Die Wochenansicht zeigt oben, welcher Tag diese Woche der Explosivtag ist, und
@@ -385,25 +389,36 @@ warum.
 **Es bleibt bei einem Explosivtag pro Woche, nie zwei.** Geprüft über alle
 Kombinationen aus Vereinstagen und Terminlagen.
 
-### Die beiden Einheiten
+### Die zwei Techniktage
 
-| Explosiv (hart) | Technik (nicht hart) |
-|---|---|
-| Leiter | Zuspiel-Position |
-| Hinweg / Treppe / Rückweg | Wandtraining |
-| Sprünge zuhause (ohne Treppe) | Schulterpflege |
-| Kraft Beine | Sprinttechnik |
-| | Video |
+Technik findet zweimal pro Woche statt, mit unterschiedlichem Schwerpunkt. Das
+Prinzip: **einschleifen → anwenden im Vereinstraining → nachschärfen.**
+
+| | Technik — Ablauf (55 Min) | Technik — Präzision (40 Min) |
+|---|---|---|
+| Schwerpunkt | Bewegungsablauf einschleifen | Quote |
+| Tempo | langsam und bewusst | konzentriert |
+| Volumen | 40 Wandzuspiele | 60 gezählte Wandzuspiele |
+| Zählung | **keine** | Trefferquote, Ziel 80 % |
+| Dazu | Sprinttechnik, Video, Auslockern | Angaben, Schulterpflege |
+
+Die Schulterpflege liegt bewusst auf dem Präzisionstag: Er kommt direkt vor dem
+Explosivtag und bereitet die Schulter darauf vor. Beide Tage zählen **nicht** als
+harte Tage.
 
 Sprinttechnik und Video sind von der Athletik- zur Technikeinheit gewandert —
-Sprinttechnik ist Technikarbeit, keine Maximalbelastung.
+Sprinttechnik ist Technikarbeit, keine Maximalbelastung. Sie liegen auf dem
+Ablauftag, nicht auf dem Präzisionstag.
 
 ### Der Ballsamstag
 
 Ist der Samstag der Explosivtag, wandert die Ballsession mit Partner auf den
-Techniktag unter der Woche — **falls der Partner kann**. Dafür der Schalter
+**Ablauftag** unter der Woche — **falls der Partner kann**. Dafür der Schalter
 *Partner verfügbar* in der Tagesansicht. Kann er nicht, gibt es dort die normale
-Technikeinheit; der Explosivtag bleibt in jedem Fall am Samstag.
+Ablaufeinheit; der Explosivtag bleibt in jedem Fall am Samstag.
+
+Bewusst der Ablauftag und nicht der Präzisionstag: Volumen und echtes Timing
+gewinnen am meisten durch einen Partner, die gezählte Wandarbeit gar nicht.
 
 Die Ballsession steht als eigener Bereich `FB_PLAN.ballsession` in `plan.js`.
 
@@ -834,7 +849,7 @@ Eine Warnung erscheint auf der Startseite, wenn **eines** von beidem zutrifft:
 
 Dazu ein Knopf, der die Minimalversion direkt einschaltet.
 
-**Betroffen sind nur Zusatzeinheiten** — Kraft, Explosiv und Technik. An Vereinstagen, an Termintagen und an freien Tagen erscheint
+**Betroffen sind nur Zusatzeinheiten** — Kraft, Explosiv und die beiden Techniktage. An Vereinstagen, an Termintagen und an freien Tagen erscheint
 die Warnung nicht, weil es dort nichts zu reduzieren gibt.
 
 Die Überschrift nennt den tatsächlichen Auslöser. Bei drei kurzen Nächten steht
@@ -991,7 +1006,8 @@ Sonderfälle:
   bleibt frei — sonst würde die Aktivierung einen Ruhetag in eine Einheit
   verwandeln.
 - **Tag nach einem Abendturnier:** Eine geplante Zusatzeinheit (Kraft,
-  Explosiv, Technik) läuft automatisch in der Minimalversion. Ein
+  Explosiv, Technik-Ablauf, Technik-Präzision) läuft automatisch in der
+  Minimalversion. Ein
   Vereinstraining bleibt unverändert. Den Notfallmodus kannst du an dem Tag
   trotzdem von Hand abwählen, wenn du dich fit fühlst.
 
@@ -1052,8 +1068,8 @@ Nie vorgeschlagen werden Vereinstraining, Termintage und der Aktivierungstag.
 
 ### Ohne Termin
 
-Läuft die Woche nach dem Standardplan: Freitag Technik & Schulterpflege, Samstag
-Technik und Sprint, Sonntag frei.
+Läuft die Woche nach dem Standardplan: Mittwoch Technik-Ablauf, Freitag
+Technik-Präzision mit Schulterpflege, Samstag Explosivtag, Sonntag frei.
 
 ### In der Wochenübersicht
 

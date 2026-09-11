@@ -50,9 +50,31 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.5',
+  appVersion: '2.7',
 
   neuerungen: [
+    {
+      version: '2.7',
+      punkte: [
+        'Technik findet neu zweimal pro Woche statt: Ablauf einschleifen, ' +
+          'im Verein anwenden, danach nachschärfen',
+        'Ablauftag: langsam, mehr Volumen, keine Trefferzählung, dazu ' +
+          'Sprinttechnik, Video und Auslockern',
+        'Präzisionstag: weniger Bälle, dafür mit Quote, dazu die Schulterpflege ' +
+          'vor dem Explosivtag',
+        'Der Freitag entfällt nur noch, wenn ein Termin am Samstag oder ' +
+          'Sonntag eingetragen ist',
+        'Beide Techniktage zählen weiterhin nicht als harte Tage'
+      ]
+    },
+    {
+      version: '2.6',
+      punkte: [
+        'Technik liegt wieder am Mittwoch, der Freitag bleibt ohne Zusatzeinheit — ' +
+          'die Änderung aus 2.5 ist zurückgenommen',
+        'Freie Tage zeigen keine Trainingszeit mehr an'
+      ]
+    },
     {
       version: '2.5',
       punkte: [
@@ -624,34 +646,39 @@ const FB_PLAN = {
           ]
         },
     {
-          id: 'technik',
-          titel: 'Technik & Sprinttechnik',
+          /* Techniktag 1 — einschleifen. Langsam, bewusst, mehr Volumen,
+             keine Trefferzählung. Die Quote kommt am zweiten Techniktag. */
+          id: 'technik-ablauf',
+          titel: 'Technik — Ablauf',
           typ: 'training',
-          dauerMin: 65,
+          dauerMin: 55,
           hart: false,
-          hinweis: 'Präzision vor Kraft. Lieber 60 saubere Zuspiele als 100 schludrige.',
+          hinweis: 'Vorher die Mobilitätsroutine, 5 Min — die Liste steht bei den Habits. ' +
+                   'Heute geht es um den Bewegungsablauf, nicht um die Quote. ' +
+                   'Lieber langsam und richtig als schnell und ungefähr.',
           notfall: {
-            text: '30 Zuspiele an der Wand',
-            uebungIds: ['fr-zuspiele'],
-            ersetzen: { 'fr-zuspiele': { einheit: '30 Stück' } }
+            text: '30 Wandzuspiele aus tiefer Position, langsam',
+            uebungIds: ['fr-tiefzuspiel'],
+            ersetzen: { 'fr-tiefzuspiel': { einheit: '30 Wiederholungen' } }
           },
           bloecke: [
             {
               id: 'fr-position',
               titel: 'Zuspiel-Position',
-              dauerMin: 10,
-              regel: 'Tief SEIN bevor der Ball kommt, nicht während er kommt.',
+              dauerMin: 20,
+              regel: 'Tief SEIN bevor der Ball kommt. Heute geht es um den ' +
+                     'Bewegungsablauf, nicht um Quote.',
               uebungen: [
                 { id: 'fr-tiefhalten', name: 'Tiefe Position halten', sets: 3, dauerSek: 30,
                   kategorie: 'Position', progression: false,
                   hinweis: 'Hüfte tief, Brust auf, Gewicht auf dem Vorfuss. Nicht in ' +
                            'den Rücken sacken.' },
                 { id: 'fr-tiefzuspiel', material: 'wand',
-                  name: 'Wandzuspiel aus tiefer Position', sets: 1,
-                  einheit: '30 Wiederholungen', kategorie: 'Position',
+                  name: 'Wandzuspiele aus tiefer Position', sets: 1,
+                  einheit: '40 Wiederholungen', kategorie: 'Position',
                   progression: false, hervorheben: true,
-                  hinweis: 'Tief SEIN bevor der Ball kommt, nicht während er kommt. ' +
-                           'Zu spät runter = zu hoch = Ball geht falsch.' },
+                  hinweis: 'Bewusst langsam. Zu spät runter = zu hoch = Ball geht falsch. ' +
+                           'Wenn du hetzt, schleifst du den Fehler ein statt den Ablauf.' },
                 { id: 'fr-verschieben', name: 'Seitliche Verschiebung in tiefer Position',
                   sets: 3, dauerSek: 20, kategorie: 'Position', progression: false,
                   hinweis: 'Tief bleiben während der ganzen Bewegung. Nicht bei jedem ' +
@@ -659,32 +686,104 @@ const FB_PLAN = {
               ]
             },
             {
+              id: 'mi-sprint',
+              titel: 'Sprinttechnik',
+              dauerMin: 20,
+              ort: 'zuhause',
+              regel: 'Qualität vor Tempo. Sobald die Form zerfällt, ist der Satz vorbei.',
+              uebungen: [
+                { id: 'mi-wandstuetz', name: 'Wandstütz-Kniehub', sets: 3, dauerSek: 20,
+                  kategorie: 'Sprint', progression: false,
+                  hinweis: 'An die Wand lehnen, Körper in einer schrägen Linie. Knie ' +
+                           'abwechselnd hochziehen. Körper bleibt gestreckt, kein Knick ' +
+                           'in der Hüfte.' },
+                { id: 'mi-askips', name: 'A-Skips', sets: 3, einheit: '× 15 m',
+                  kategorie: 'Sprint', progression: false,
+                  hinweis: 'Fuss aktiv nach unten drücken, nicht nachschleifen.' },
+                { id: 'mi-startsprint', name: 'Sprints aus Bauchlage',
+                  sets: 5, einheit: '× 10 m', kategorie: 'Sprint', progression: false,
+                  hervorheben: true,
+                  hinweis: 'Erzwingt Vorlage — die ersten Schritte flach und nach vorne, ' +
+                           'nicht aufrichten.' },
+                { id: 'mi-lockersprint', name: 'Lockere Sprints', sets: 4,
+                  einheit: '× 30 m bei ca. 90 %', kategorie: 'Sprint', progression: false,
+                  hinweis: 'Bewusst locker: Kiefer entspannt, Hände offen, Schultern ' +
+                           'unten. Nicht "schnell" denken, sondern "lang und leicht". ' +
+                           'Verspannung macht langsamer.' }
+              ]
+            },
+            {
+              id: 'mi-sprintvideo',
+              titel: 'Video',
+              dauerMin: 5,
+              ort: 'zuhause',
+              uebungen: [
+                { id: 'mi-sprintvideo-u', name: 'Sprint über 20 m filmen', sets: 1,
+                  einheit: 'von der Seite', kategorie: 'Sprint', progression: false,
+                  hervorheben: true,
+                  hinweis: 'Von der Seite, nicht von hinten — nur so siehst du die ' +
+                           'Vorlage. Handy aufstellen reicht, wenn niemand filmen kann.' }
+              ]
+            },
+            {
+              id: 'mi-auslockern',
+              titel: 'Auslockern',
+              dauerMin: 5,
+              uebungen: [
+                { id: 'mi-auslockern-u', name: 'Auslockern', sets: 1, einheit: '5 Min',
+                  kategorie: 'Auslockern', progression: false,
+                  hinweis: 'Locker austraben und ausschütteln. Nicht dehnen — das ist ' +
+                           'das Abenddehnen, und das kommt später.' }
+              ]
+            }
+          ]
+        },
+    {
+          /* Techniktag 2 — nachschärfen. Weniger Volumen, dafür mit
+             Trefferzählung, plus Schulterpflege vor dem Explosivtag. */
+          id: 'technik-praezision',
+          titel: 'Technik — Präzision',
+          typ: 'training',
+          dauerMin: 40,
+          hart: false,
+          hinweis: 'Vorher die Mobilitätsroutine, 5 Min — die Liste steht bei den Habits. ' +
+                   'Heute zählt die Quote. Weniger Bälle als am Ablauftag, dafür jeder ' +
+                   'einzelne mit Absicht.',
+          notfall: {
+            text: '30 Zuspiele auf den Punkt',
+            uebungIds: ['fr-zuspiele'],
+            ersetzen: { 'fr-zuspiele': { einheit: '30 Stück', zielVersuche: 30 } }
+          },
+          bloecke: [
+            {
               id: 'fr-wand',
               material: 'wand',
-              titel: 'Wand',
-              dauerMin: 30,
+              titel: 'Präzision',
+              dauerMin: 25,
+              regel: 'Heute zählt die Quote. Arbeite an dem, was im letzten ' +
+                     'Vereinstraining nicht funktioniert hat.',
               uebungen: [
-                { id: 'fr-zuspiele', material: 'wand', name: 'Zuspiele gegen die Wand', sets: 1, einheit: '100 Stück',
-                  kategorie: 'Technik', progression: false,
-                  zielQuote: 0.8, zielVersuche: 100,
+                { id: 'fr-zuspiele', material: 'wand',
+                  name: 'Wandzuspiele auf den markierten Punkt', sets: 1,
+                  einheit: '60 Stück', kategorie: 'Technik', progression: false,
+                  zielQuote: 0.8, zielVersuche: 60,
                   // Im Angriff kürzer, dafür kommen Angaben und Schlagtechnik dazu
-                  pos: { angriff: { einheit: '50 Stück', zielVersuche: 50 } },
+                  pos: { angriff: { einheit: '30 Stück', zielVersuche: 30 } },
                   hinweis: 'Beide Arme. Immer denselben markierten Punkt treffen.' },
-                { id: 'fr-serie', material: 'wand', name: 'Zuspiele in Folge auf den Punkt', typ: 'serie', zielSerie: 10,
-                  sets: 1, kategorie: 'Technik', progression: false, hervorheben: true,
-                  hinweis: 'Zehn saubere in Folge. Ein Fehler setzt zurück auf null. ' +
-                           'Das ist der Unterschied zwischen "kann ich" und "kann ich immer".' },
-                { id: 'fr-annahme', material: 'wand', name: 'Tiefe Annahme von der Wand', sets: 1, einheit: 'bis es sitzt',
-                  kategorie: 'Technik', progression: false,
-                  hinweis: 'Aus der Abwehrposition heraus.' },
+                { id: 'fr-annahme', material: 'wand',
+                  name: 'Tiefe Annahme von der Wand und stellen', sets: 1,
+                  einheit: 'bis es sitzt', kategorie: 'Technik', progression: false,
+                  hinweis: 'Aus der Abwehrposition heraus. Annehmen und stellen als eine ' +
+                           'Bewegung, nicht als zwei.' },
                 { id: 'fr-angaben', name: 'Angaben auf ein Ziel', sets: 1, einheit: '30 Stück',
-                  kategorie: 'Technik', optional: true, progression: false,
+                  kategorie: 'Technik', progression: false,
                   zielQuote: 0.8, zielVersuche: 30,
-                  // Im Angriff Pflichtteil und aufgestockt
-                  pos: { angriff: { einheit: '50 Stück', zielVersuche: 50, optional: false,
+                  // Im Angriff aufgestockt
+                  pos: { angriff: { einheit: '50 Stück', zielVersuche: 50,
                          hinweis: 'Braucht Platz. Wenn der fehlt, wenigstens auf eine ' +
                                   'markierte Stelle an der Wand.' } },
-                  hinweis: 'Falls Platz vorhanden.' },
+                  hinweis: 'Falls Platz vorhanden. Sonst auf eine markierte Stelle an ' +
+                           'der Wand.' },
                 { id: 'fr-schlagtechnik', name: 'Schlagtechnik ohne Ball', sets: 3, reps: '10',
                   kategorie: 'Technik', progression: false, nurPos: 'angriff',
                   hinweis: 'Bewegungsablauf langsam durchgehen, ohne Ball und ohne Tempo. ' +
@@ -697,6 +796,7 @@ const FB_PLAN = {
               titel: 'Schulterpflege',
               untertitel: 'locker, 10 Min',
               dauerMin: 10,
+              regel: 'Vorbereitung auf den Explosivtag. Locker, nicht bis zur Ermüdung.',
               uebungen: [
                 { id: 'fr-superman', name: 'Superman', sets: 3, reps: '12',
                   kategorie: 'Schulter', progression: false, hinweis: '' },
@@ -705,41 +805,6 @@ const FB_PLAN = {
                 { id: 'fr-aussenrot', name: 'Aussenrotation mit Handtuch', sets: 3, reps: '15',
                   kategorie: 'Schulter', progression: false, hinweis: '' }
               ]
-            },
-            {
-              id: 'mi-sprint',
-              titel: 'Sprinttechnik',
-              dauerMin: 10,
-              ort: 'zuhause',
-              regel: 'Qualität vor Tempo. Sobald die Form zerfällt, ist der Satz vorbei.',
-              uebungen: [
-                { id: 'mi-wandstuetz', name: 'Wandstütz-Kniehub', sets: 3, dauerSek: 20,
-                  kategorie: 'Sprint', progression: false,
-                  hinweis: 'An die Wand lehnen, Körper in einer schrägen Linie. Knie ' +
-                           'abwechselnd hochziehen. Körper bleibt gestreckt, kein Knick ' +
-                           'in der Hüfte.' },
-                { id: 'mi-askips', name: 'A-Skips', sets: 3, einheit: '× 15 m',
-                  kategorie: 'Sprint', progression: false,
-                  hinweis: 'Fuss aktiv nach unten drücken, nicht nachschleifen.' },
-                { id: 'mi-startsprint', name: 'Sprints aus Bauchlage oder Kniestand',
-                  sets: 5, einheit: '× 10 m', kategorie: 'Sprint', progression: false,
-                  hervorheben: true,
-                  hinweis: 'Erzwingt Vorlage — die ersten Schritte flach und nach vorne, ' +
-                           'nicht aufrichten.' },
-                { id: 'mi-bergsprint', name: 'Bergsprints oder Treppensprints', sets: 6,
-                  einheit: '× 10 Sek', kategorie: 'Sprint', progression: false,
-                  optional: true,
-                  hinweis: 'Steigung erzwingt automatisch die richtige Vorlage. Falls ' +
-                           'weder Hügel noch Treppe da sind, überspringen.' }
-              ]
-            },
-            {
-              id: 'mi-video',
-              titel: 'Video',
-              dauerMin: 10,
-              ort: 'zuhause',
-              typ: 'video',   // wird als Notizfeld gerendert, nicht als Übungsliste
-              uebungen: []
             }
           ]
         }
