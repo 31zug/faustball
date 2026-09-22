@@ -83,6 +83,8 @@ const FB_HABITS = {
     {
       id: 'ballkontakte',
       abWoche: 1,
+      // inFerien: läuft auch in den Ferien täglich weiter
+      inFerien: '5–10 Min, auch ohne Wand',
       name: 'Ballkontakte',
       ziel: '5 Minuten Ball am Arm. Wand, Kollege, Garten — egal wo.',
       hinweis: 'Fünf Minuten täglich schlagen eine lange Einheit pro Woche. ' +
@@ -135,6 +137,7 @@ const FB_HABITS = {
     {
       id: 'mobilitaet',
       abWoche: 1,
+      inFerien: 'täglich, gerade an Reisetagen',
       name: 'Mobilität',
       ziel: '5 Minuten Hüfte, Sprunggelenk, BWS.',
       hinweis: 'Sprunggelenk und Brustwirbelsäule sind das, was dich in der tiefen ' +
@@ -214,6 +217,7 @@ const FB_HABITS = {
     {
       id: 'abenddehnen',
       abWoche: 1,
+      inFerien: 'täglich, besonders nach Strandeinheiten',
       name: 'Abenddehnen',
       ziel: '10 Minuten statisch dehnen, jeden Abend.',
       // achtung: wird als Warnkasten gezeigt, nicht als stiller Zusatztext
@@ -392,7 +396,16 @@ const FB_HABITS = {
     if (!FB_STORE.habitErledigt(cursor, habitId)) {
       cursor = FB_DATUM.plusTage(cursor, -1);
     }
-    while (FB_DATUM.diffTage(ab, cursor) >= 0 && FB_STORE.habitErledigt(cursor, habitId)) {
+    while (FB_DATUM.diffTage(ab, cursor) >= 0) {
+      // Ferientage überspringen: Sie zählen nicht mit und brechen
+      // nicht ab. Wer in den Ferien trotzdem abhakt, bekommt den Tag
+      // aber gutgeschrieben.
+      if (FB_STORE.istFerientag(cursor)) {
+        if (FB_STORE.habitErledigt(cursor, habitId)) zaehler++;
+        cursor = FB_DATUM.plusTage(cursor, -1);
+        continue;
+      }
+      if (!FB_STORE.habitErledigt(cursor, habitId)) break;
       zaehler++;
       cursor = FB_DATUM.plusTage(cursor, -1);
     }
@@ -409,8 +422,13 @@ const FB_HABITS = {
     if (!habit) return false;
     const ab = this.startDatumVon(habit);
 
+    // In den Ferien pausiert die Regel, und Ferientage zählen auch
+    // danach nicht als verpasst.
+    if (FB_STORE.istFerientag(heuteIso)) return false;
+
     const gestern = FB_DATUM.plusTage(heuteIso, -1);
     const vorgestern = FB_DATUM.plusTage(heuteIso, -2);
+    if (FB_STORE.istFerientag(gestern) || FB_STORE.istFerientag(vorgestern)) return false;
 
     // Beide Tage müssen im Gültigkeitsbereich des Habits liegen
     if (FB_DATUM.diffTage(ab, vorgestern) < 0) return false;

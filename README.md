@@ -254,7 +254,7 @@ Im `localStorage` des Browsers, in sechs Schlüsseln:
 | `fb_journal` | alle Journaleinträge |
 | `fb_termine` | Spiele und Turniere |
 | `fb_feedback` | Trainerhinweise, eigene Beobachtungen, offene Rückfragen |
-| `fb_settings` | Name, Position, Vereinstage, Material, Planstart, Trainingszeiten, Hantelgewicht |
+| `fb_settings` | Name, Position, Vereinstage, Ferien, Material, Planstart, Trainingszeiten, Hantelgewicht |
 
 Dazu kommen nach einem Update `fb_backup_<version>` — Sicherungskopien, die vor
 einer Migration angelegt wurden. Die kannst du löschen, sobald alles läuft.
@@ -1105,6 +1105,78 @@ Einen vierten Typ legst du einfach als weiteren Eintrag unter `typen` an — die
 App liest die Liste, im Formular erscheint er automatisch.
 
 Die Übungen unter `aktivierung` und `spieltag` bearbeitest du wie alle anderen.
+
+---
+
+## Ferien
+
+Unter *Einstellungen → Ferien* trägst du Zeiträume mit Von- und Bis-Datum ein.
+Sind Anfang und Ende vertauscht, dreht die App sie um, statt still nichts zu tun.
+Voreingetragen ist **26. September bis 6. Oktober 2026**; der Eintrag darf weg.
+
+### Der Ablauf
+
+| Tag | Was ansteht |
+|---|---|
+| 1 | Reisetag — kein Training |
+| 2 | frei |
+| 3 | Kraft mit Rucksack + Ball |
+| 4 | frei |
+| 5 | **Strand-Explosiv** — die erste läuft auf zwei Dritteln |
+| 6 | frei |
+| 7 | Kraft mit Rucksack + Ball |
+| 8 | frei |
+| 9 | Strand-Explosiv |
+| ab 10 | frei |
+| letzter Tag | Reisetag — schlägt den Rhythmus |
+
+Der Rhythmus steht in `plan.js` unter `ferien.rhythmus`. `null` heisst frei, und
+was über die Liste hinausgeht, ist ebenfalls frei. Bei kurzen Ferien fällt der
+Reisetag am Schluss auf einen Rhythmustag — der Reisetag gewinnt.
+
+### Die beiden Ferieneinheiten
+
+| | Strand-Explosiv (35 Min) | Kraft mit Rucksack + Ball (45 Min) |
+|---|---|---|
+| Harter Tag | **ja** | nein |
+| Material | fester, feuchter Sand | Rucksack mit 4–6 Petflaschen à 1.5 l |
+| Inhalt | Aufwärmen, A-Skips, Sprints, Antritte, CMJ, seitliche Sprünge | Rudern, W-Raises, Liegestütze, Split Squats, einbeiniges Kreuzheben, Rumpf |
+| Dazu | — | Block „Ball ohne Wand", 15 Min |
+
+Die erste Strandeinheit läuft automatisch auf zwei Dritteln, mit dem Hinweis
+*„Sand belastet Waden und Achillessehne stärker."* Betroffen sind nur Übungen,
+die in `plan.js` `maximal: true` tragen — Sprints, Antritte und Sprünge. A-Skips
+und Aufwärmen bleiben voll.
+
+### Was pausiert und was weiterläuft
+
+**Streaks und die Zwei-Tage-Regel pausieren.** Ferientage werden beim
+Zurückschauen übersprungen: Sie brechen keine Serie und zählen auch nach den
+Ferien nicht als verpasst. Wer in den Ferien trotzdem abhakt, bekommt den Tag
+gutgeschrieben — pausieren heisst nicht, dass es nichts gilt.
+
+**Täglich weiter laufen** Mobilität, Abenddehnen und Ballkontakte (5–10 Min,
+auch ohne Wand). Die drei tragen in `habits.js` das Feld `inFerien`. Alle
+anderen Habits stehen weiterhin in der Liste und lassen sich abhaken, werden
+aber nicht erwartet.
+
+### Woche vor den Ferien
+
+Fällt der Samstag einer spielfreien Woche in die Ferien, wandert der Explosivtag
+auf den Mittwoch — dieselbe Regel wie bei einem Termin am Wochenende. Der Freitag
+bleibt Techniktag und trägt den Hinweis *„Morgen Ferienbeginn — locker bleiben."*
+
+### Woche nach den Ferien
+
+In den sieben Tagen nach dem letzten Ferientag steht auf jeder Einheit
+*„Wiedereinstieg: 80 %, besonders am Explosivtag."* Maximale Übungen laufen auf
+zwei Dritteln, sichtbar an der Marke **reduziert · sonst N** neben der Übung.
+
+### Termine schlagen Ferien
+
+Ein Spiel oder Turnier in den Ferien ersetzt den Ferientag, genau wie es sonst
+die reguläre Einheit ersetzt. Der Ruhetag nach einem Tagesturnier gilt auch in
+den Ferien. Wer im Trainingslager spielt, bekommt den Spieltag.
 
 ---
 

@@ -199,6 +199,9 @@ const FB_STORE = {
       setupFertig: false,         // steuert das Erststart-Setup
       position: 'zuspiel',        // 'zuspiel' oder 'angriff'
       vereinTage: [2, 4],         // 1 = Montag … 7 = Sonntag
+      // Ferienzeiträume, in der App änderbar: [ { id, von, bis } ]
+      // Der erste Eintrag ist ein Startwert und darf gelöscht werden.
+      ferien: [{ id: 'fer-2026-herbst', von: '2026-09-26', bis: '2026-10-06' }],
       material: {                 // was zuhause verfügbar ist
         hantel: true, stange: false, leiter: true,
         treppe: true, wand: true, band: false
@@ -930,6 +933,75 @@ const FB_STORE = {
     this.state.settings.name = '';
     this.state.settings.startDatum = null;
     this.state.settings.appVersion = null;
+    this.speichern('settings');
+  },
+
+  /* --- Ferien ---------------------------------------------------
+     Zeiträume, in denen der Wochenplan durch den Ferienrhythmus
+     ersetzt wird. Termine haben trotzdem Vorrang — das entscheidet
+     die Planlogik in app.js, nicht der Speicher. */
+
+  ferien() {
+    const f = this.state.settings.ferien;
+    return Array.isArray(f)
+      ? f.filter(e => e && e.von && e.bis).slice().sort((a, b) => a.von < b.von ? -1 : 1)
+      : [];
+  },
+
+  /* Der Ferienzeitraum, in den ein Datum fällt — oder null */
+  ferienFuer(iso) {
+    if (!iso) return null;
+    return this.ferien().find(f => f.von <= iso && iso <= f.bis) || null;
+  },
+
+  istFerientag(iso) {
+    return !!this.ferienFuer(iso);
+  },
+
+  /* Beginnen morgen die Ferien? Gibt den Zeitraum zurück oder null. */
+  ferienBeginnenMorgen(iso) {
+    const morgen = FB_DATUM.plusTage(iso, 1);
+    if (this.istFerientag(iso)) return null;
+    const f = this.ferienFuer(morgen);
+    return f && f.von === morgen ? f : null;
+  },
+
+  /* Der zuletzt beendete Ferienzeitraum vor einem Datum */
+  letzteFerienVor(iso) {
+    const vorbei = this.ferien().filter(f => f.bis < iso);
+    return vorbei.length ? vorbei[vorbei.length - 1] : null;
+  },
+
+  /* Anlegen oder ändern. Von/bis werden bei Bedarf getauscht,
+     damit ein verdrehter Zeitraum nicht still nichts tut. */
+  setFerien(felder, id) {
+    let von = (felder.von || '').trim();
+    let bis = (felder.bis || '').trim();
+    if (!von || !bis) return null;
+    if (bis < von) { const h = von; von = bis; bis = h; }
+
+    if (!Array.isArray(this.state.settings.ferien)) this.state.settings.ferien = [];
+    const liste = this.state.settings.ferien;
+
+    if (id) {
+      const vorhanden = liste.find(f => f.id === id);
+      if (vorhanden) {
+        vorhanden.von = von; vorhanden.bis = bis;
+        this.speichern('settings');
+        return vorhanden;
+      }
+    }
+    const neu = { id: 'fer-' + Date.now().toString(36) + '-' +
+      Math.random().toString(36).slice(2, 7), von: von, bis: bis };
+    liste.push(neu);
+    this.speichern('settings');
+    return neu;
+  },
+
+  loescheFerien(id) {
+    const liste = this.state.settings.ferien;
+    if (!Array.isArray(liste)) return;
+    this.state.settings.ferien = liste.filter(f => f.id !== id);
     this.speichern('settings');
   },
 

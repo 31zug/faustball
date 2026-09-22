@@ -50,9 +50,20 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.7',
+  appVersion: '2.8',
 
   neuerungen: [
+    {
+      version: '2.8',
+      punkte: [
+        'Neu: Ferienmodus. Zeiträume trägst du in den Einstellungen ein',
+        'In den Ferien: Reisetag, frei, dann Kraft – frei – Explosiv im Wechsel',
+        'Zwei neue Einheiten: Strand-Explosiv und Kraft mit Rucksack + Ball',
+        'Streaks und die Zwei-Tage-Regel pausieren und brechen nicht',
+        'Fällt der Samstag in die Ferien, wandert der Explosivtag auf den Mittwoch',
+        'Erste Woche danach: Wiedereinstieg auf 80 %, maximale Übungen auf zwei Drittel'
+      ]
+    },
     {
       version: '2.7',
       punkte: [
@@ -541,42 +552,42 @@ const FB_PLAN = {
               dauerMin: 25,
               ort: 'treppe',
               uebungen: [
-                { id: 'mi-sprints', name: 'Sprints jede Stufe', sets: 6, einheit: '×',
+                { id: 'mi-sprints', maximal: true, name: 'Sprints jede Stufe', sets: 6, einheit: '×',
                   kategorie: 'Treppe', progression: false,
                   hinweis: 'Volle Pause zwischen den Läufen. Qualität vor Menge.' },
-                { id: 'mi-doppelstufe', name: 'Doppelstufen-Sprünge', sets: 4, einheit: '×',
+                { id: 'mi-doppelstufe', maximal: true, name: 'Doppelstufen-Sprünge', sets: 4, einheit: '×',
                   kategorie: 'Treppe', sprung: true, progression: false,
                   hinweis: 'Explosiv, nicht auf Zeit.' },
                 { id: 'mi-seitlich-hoch', name: 'Seitlich hochsteigen', sets: 3, einheit: '×', proSeite: true,
                   kategorie: 'Treppe', progression: false, hinweis: '' },
                 { id: 'mi-waden', name: 'Wadenheben auf Stufenkante', sets: 3, reps: '15',
                   kategorie: 'Treppe', hinweis: '' },
-                { id: 'mi-pogo', name: 'Pogo Jumps', sets: 3, reps: '10',
+                { id: 'mi-pogo', maximal: true, name: 'Pogo Jumps', sets: 3, reps: '10',
                   kategorie: 'Sprünge', sprung: true, progression: false,
                   hinweis: 'Steife Fussgelenke, kurzer Bodenkontakt.' },
-                { id: 'mi-seitsprung', name: 'Seitliche Sprünge', sets: 3, reps: '6', proSeite: true,
+                { id: 'mi-seitsprung', maximal: true, name: 'Seitliche Sprünge', sets: 3, reps: '6', proSeite: true,
                   kategorie: 'Sprünge', sprung: true, hervorheben: true, progression: false,
                   pos: { angriff: { hervorheben: false,
                          hinweis: 'Bleibt wichtig für die Abwehrarbeit, ist im Angriff aber ' +
                                   'nicht mehr die Schlüsselübung.' } },
                   hinweis: 'Wichtigste Übung für die Abwehr. Hier lohnt sich Konzentration am meisten.' },
-                { id: 'mi-cmj', name: 'Countermovement Jumps', sets: 4, reps: '3',
+                { id: 'mi-cmj', maximal: true, name: 'Countermovement Jumps', sets: 4, reps: '3',
                   kategorie: 'Sprünge', sprung: true, progression: false,
                   pos: { angriff: { sets: 5, hervorheben: true,
                          hinweis: 'Maximale Höhe. Deine Schlüsselübung — hier entscheidet ' +
                                   'sich, wie hoch du am Ball bist. Zwischen den Sätzen ' +
                                   'wirklich ausruhen.' } },
                   hinweis: 'Maximale Höhe. Zwischen den Sätzen wirklich ausruhen.' },
-                { id: 'mi-anlaufsprung', name: 'Anlaufsprünge mit Ausholbewegung', sets: 4, reps: '4',
+                { id: 'mi-anlaufsprung', maximal: true, name: 'Anlaufsprünge mit Ausholbewegung', sets: 4, reps: '4',
                   kategorie: 'Sprünge', sprung: true, progression: false, nurPos: 'angriff',
                   hinweis: 'Kurzer Anlauf, beide Arme mitnehmen, maximale Höhe. Der ' +
                            'Armzug ist ein Teil der Sprunghöhe — nicht weglassen.' },
-                { id: 'mi-depthjump', name: 'Depth Jumps von einer Treppenstufe', sets: 3, reps: '5',
+                { id: 'mi-depthjump', maximal: true, name: 'Depth Jumps von einer Treppenstufe', sets: 3, reps: '5',
                   kategorie: 'Sprünge', sprung: true, progression: false, nurPos: 'angriff',
                   hinweis: 'Von einer einzelnen Stufe herunterfallen lassen, sofort maximal ' +
                            'hoch abspringen. Nur mit sauberer, leiser Landung — sonst ' +
                            'weglassen. Bei müden Beinen ganz streichen.' },
-                { id: 'mi-antritte', name: 'Antritte aus tiefer Abwehrposition', sets: 6, einheit: '× ca. 10 m',
+                { id: 'mi-antritte', maximal: true, name: 'Antritte aus tiefer Abwehrposition', sets: 6, einheit: '× ca. 10 m',
                   kategorie: 'Treppe', optional: true, progression: false,
                   hinweis: 'Falls flaches Gelände vorhanden, sonst zuhause.' }
               ]
@@ -599,30 +610,30 @@ const FB_PLAN = {
               untertitel: 'Ersatz für die Treppe',
               ort: 'ersatz',
               uebungen: [
-                { id: 'mi-pogo-h', name: 'Pogo Jumps', sets: 3, reps: '10',
+                { id: 'mi-pogo-h', maximal: true, name: 'Pogo Jumps', sets: 3, reps: '10',
                   kategorie: 'Sprünge', sprung: true, progression: false,
                   hinweis: 'Steife Fussgelenke, kurzer Bodenkontakt.' },
-                { id: 'mi-seitsprung-h', name: 'Seitliche Sprünge', sets: 3, reps: '6', proSeite: true,
+                { id: 'mi-seitsprung-h', maximal: true, name: 'Seitliche Sprünge', sets: 3, reps: '6', proSeite: true,
                   kategorie: 'Sprünge', sprung: true, hervorheben: true, progression: false,
                   pos: { angriff: { hervorheben: false,
                          hinweis: 'Bleibt wichtig für die Abwehrarbeit, ist im Angriff aber ' +
                                   'nicht mehr die Schlüsselübung.' } },
                   hinweis: 'Wichtigste Übung für die Abwehr. Geht auch auf kleinem Raum.' },
-                { id: 'mi-cmj-h', name: 'Countermovement Jumps', sets: 4, reps: '3',
+                { id: 'mi-cmj-h', maximal: true, name: 'Countermovement Jumps', sets: 4, reps: '3',
                   kategorie: 'Sprünge', sprung: true, progression: false,
                   pos: { angriff: { sets: 5, hervorheben: true,
                          hinweis: 'Maximale Höhe. Deine Schlüsselübung.' } },
                   hinweis: 'Maximale Höhe.' },
-                { id: 'mi-anlaufsprung-h', name: 'Anlaufsprünge mit Ausholbewegung', sets: 4, reps: '4',
+                { id: 'mi-anlaufsprung-h', maximal: true, name: 'Anlaufsprünge mit Ausholbewegung', sets: 4, reps: '4',
                   kategorie: 'Sprünge', sprung: true, progression: false, nurPos: 'angriff',
                   hinweis: 'Auch drei Schritte Anlauf reichen. Beide Arme mitnehmen, ' +
                            'maximale Höhe.' },
-                { id: 'mi-depthjump-h', name: 'Depth Jumps von einer Treppenstufe', sets: 3, reps: '5',
+                { id: 'mi-depthjump-h', maximal: true, name: 'Depth Jumps von einer Treppenstufe', sets: 3, reps: '5',
                   kategorie: 'Sprünge', sprung: true, progression: false, nurPos: 'angriff',
                   hinweis: 'Eine einzelne Stufe im Haus reicht. Herunterfallen lassen, ' +
                            'sofort maximal hoch abspringen. Nur mit sauberer, leiser ' +
                            'Landung — sonst weglassen.' },
-                { id: 'mi-antritte-h', name: 'Antritte aus tiefer Abwehrposition', sets: 6, einheit: '× kurz',
+                { id: 'mi-antritte-h', maximal: true, name: 'Antritte aus tiefer Abwehrposition', sets: 6, einheit: '× kurz',
                   kategorie: 'Sprünge', progression: false,
                   hinweis: 'Auch auf wenigen Metern: erste drei Schritte zählen.' }
               ]
@@ -700,7 +711,7 @@ const FB_PLAN = {
                 { id: 'mi-askips', name: 'A-Skips', sets: 3, einheit: '× 15 m',
                   kategorie: 'Sprint', progression: false,
                   hinweis: 'Fuss aktiv nach unten drücken, nicht nachschleifen.' },
-                { id: 'mi-startsprint', name: 'Sprints aus Bauchlage',
+                { id: 'mi-startsprint', maximal: true, name: 'Sprints aus Bauchlage',
                   sets: 5, einheit: '× 10 m', kategorie: 'Sprint', progression: false,
                   hervorheben: true,
                   hinweis: 'Erzwingt Vorlage — die ersten Schritte flach und nach vorne, ' +
@@ -947,6 +958,216 @@ const FB_PLAN = {
     { was: 'Journal', minimal: 'Eine Zeile statt drei' },
     { was: 'Meditation', minimal: '1 Minute statt 3' }
   ],
+
+  /* =============================================================
+     Ferien.
+
+     Die Zeiträume selber trägst du in den Einstellungen ein, nicht
+     hier. Hier steht nur, was an Ferientagen passiert.
+
+     Ablauf ab dem ersten Ferientag:
+       Tag 1   Reisetag
+       Tag 2   frei
+       ab Tag 3 der Rhythmus unten, alles danach frei
+       letzter Tag  Reisetag — schlägt den Rhythmus
+
+     Ein Termin am selben Tag hat immer Vorrang. Wer in den Ferien
+     ein Spiel hat, bekommt den Spieltag, nicht den Strandtag.
+     ============================================================= */
+  ferien: {
+
+    /* Ab dem dritten Ferientag, Index 0 = Tag 3.
+       null heisst frei. Was über das Ende hinausgeht, ist frei. */
+    rhythmus: ['kraft', null, 'explosiv', null, 'kraft', null, 'explosiv'],
+
+    /* Die erste Strandeinheit läuft auf diesem Anteil. */
+    ersteReduktion: 2 / 3,
+
+    sandHinweis: 'Sand belastet Waden und Achillessehne stärker.',
+
+    reisetag: {
+      id: 'ferien-reise',
+      typ: 'frei',
+      titel: 'Reisetag',
+      hart: false,
+      dauerMin: null,   // sonst bleibt die Dauer der verdrängten Einheit stehen
+      bloecke: [],
+      hinweis: 'Reisetag. Kein Training. Viel trinken und zwischendurch aufstehen ' +
+               'und ein paar Schritte gehen.'
+    },
+
+    freierTag: {
+      id: 'ferien-frei',
+      typ: 'frei',
+      titel: 'Ferien — frei',
+      hart: false,
+      dauerMin: null,
+      bloecke: [],
+      hinweis: 'Heute nichts Geplantes. Mobilität, Abenddehnen und ein paar ' +
+               'Ballkontakte laufen als Habits weiter, mehr braucht es nicht.'
+    },
+
+    /* Erste Woche nach den Ferien */
+    wiedereinstieg: {
+      titel: 'Wiedereinstieg',
+      text: 'Wiedereinstieg: 80 %, besonders am Explosivtag.',
+      reduktion: 2 / 3
+    },
+
+    /* Letzter Tag vor Ferienbeginn */
+    vorFerien: 'Morgen Ferienbeginn — locker bleiben.',
+
+    einheiten: {
+
+      explosiv: {
+        id: 'ferien-explosiv',
+        titel: 'Strand-Explosiv',
+        typ: 'training',
+        dauerMin: 35,
+        hart: true,
+        hinweis: 'Auf festem, feuchtem Sand nahe am Wasser. Barfuss nur ohne Steine ' +
+                 'und Muscheln. Morgens trainieren, viel trinken. Pausen 2–3 Min bei ' +
+                 'allen maximalen Übungen — lieber weniger Wiederholungen als müde.',
+        notfall: {
+          text: 'Nur Aufwärmen und 3 Sprints',
+          uebungIds: ['fe-aufwaermen', 'fe-sprints'],
+          ersetzen: { 'fe-sprints': { sets: 3 } }
+        },
+        bloecke: [
+          {
+            id: 'fe-warmup',
+            titel: 'Aufwärmen',
+            dauerMin: 10,
+            uebungen: [
+              { id: 'fe-aufwaermen', name: 'Traben, Skippings, Anfersen, Mobilität',
+                sets: 1, einheit: '10 Min', kategorie: 'Aufwärmen', progression: false,
+                hinweis: 'Auf Sand dauert das Aufwärmen länger als auf Asphalt. Nicht ' +
+                         'abkürzen — die Achillessehne braucht die Zeit.' }
+            ]
+          },
+          {
+            id: 'fe-sprint',
+            titel: 'Sprint und Antritt',
+            dauerMin: 15,
+            regel: 'Volle Pause zwischen den Läufen, 2–3 Min. Wer durchzieht, ' +
+                   'trainiert Ausdauer statt Schnelligkeit.',
+            uebungen: [
+              { id: 'fe-askips', name: 'A-Skips', sets: 3, einheit: '× 15 m',
+                kategorie: 'Sprint', progression: false,
+                hinweis: 'Fuss aktiv nach unten drücken, nicht nachschleifen.' },
+              { id: 'fe-sprints', maximal: true, name: 'Sprints', sets: 6, einheit: '× 20 m',
+                kategorie: 'Sprint', progression: false, hervorheben: true,
+                hinweis: 'Ellbogen bleibt bei 90 Grad, auch hinten. Volle Pause ' +
+                         'zwischen den Läufen.' },
+              { id: 'fe-antritte', maximal: true,
+                name: 'Antritte aus tiefer Abwehrposition', sets: 5, einheit: '× 10 m',
+                kategorie: 'Sprint', progression: false,
+                hinweis: 'Aus der Abwehrposition heraus losziehen, erste Schritte flach.' }
+            ]
+          },
+          {
+            id: 'fe-sprung',
+            titel: 'Sprung',
+            dauerMin: 10,
+            regel: 'Leise landen. Sand verzeiht die Landung, die Sehne nicht.',
+            uebungen: [
+              { id: 'fe-cmj', maximal: true, name: 'Countermovement Jumps', sets: 4, reps: '3',
+                kategorie: 'Sprung', sprung: true, progression: false,
+                hinweis: 'Aus dem Stand tief und sofort wieder hoch. Kein Zwischenstopp ' +
+                         'unten.' },
+              { id: 'fe-seitsprung', maximal: true, name: 'Seitliche Sprünge', sets: 3,
+                reps: '6', proSeite: true, kategorie: 'Sprung', sprung: true,
+                progression: false,
+                hinweis: 'Seitlich abspringen und kontrolliert landen. Genau die ' +
+                         'Bewegung, die du in der Abwehr brauchst.' }
+            ]
+          }
+        ]
+      },
+
+      kraft: {
+        id: 'ferien-kraft',
+        titel: 'Kraft mit Rucksack + Ball',
+        typ: 'training',
+        dauerMin: 45,
+        hart: false,
+        hinweis: 'Rucksack mit 4–6 Petflaschen à 1.5 l (Wasser oder Sand), gut ' +
+                 'gepolstert. Ergibt ca. 6–9 kg.',
+        notfall: {
+          text: 'Nur Liegestütze, Split Squats und Seitstütz',
+          uebungIds: ['fk-liegestuetze', 'fk-splitsquat', 'fk-seitstuetz']
+        },
+        bloecke: [
+          {
+            id: 'fk-oberkoerper',
+            titel: 'Oberkörper',
+            dauerMin: 15,
+            regel: 'Je 3 Sätze. Die Flaschen im Rucksack so packen, dass nichts drückt.',
+            uebungen: [
+              { id: 'fk-rudern', name: 'Rucksack-Rudern vorgebeugt', sets: 3, reps: '12',
+                kategorie: 'Ziehen', progression: false,
+                hinweis: 'Rücken gerade, Rucksack an den Trägern halten. Schulterblätter ' +
+                         'zusammenziehen, nicht nur mit den Armen ziehen.' },
+              { id: 'fk-wraises', name: 'W-Raises am Boden', sets: 3, reps: '12',
+                kategorie: 'Schulter', progression: false,
+                hinweis: 'Bauchlage, Arme im W. Nur die Arme heben, der Kopf bleibt unten.' },
+              { id: 'fk-liegestuetze', name: 'Liegestütze', sets: 3, reps: '10–15',
+                kategorie: 'Drücken', progression: false,
+                hinweis: 'Mit Rucksack, wenn es zu leicht wird.' }
+            ]
+          },
+          {
+            id: 'fk-beine',
+            titel: 'Beine',
+            dauerMin: 12,
+            regel: 'Je 3 Sätze. Schwächere Seite zuerst.',
+            uebungen: [
+              { id: 'fk-splitsquat', name: 'Bulgarische Split Squats', sets: 3, reps: '8',
+                proSeite: true, kategorie: 'Beinkraft', einarmig: true, progression: false,
+                hinweis: 'Hinterfuss auf Bett oder Stuhl.' },
+              { id: 'fk-kreuzheben', name: 'Einbeiniges Kreuzheben mit Rucksack', sets: 3,
+                reps: '8', proSeite: true, kategorie: 'Beinkraft', einarmig: true,
+                progression: false,
+                hinweis: 'Hüfte und Standbein. Genau das, was du bei tiefen Abwehrbällen ' +
+                         'brauchst.' }
+            ]
+          },
+          {
+            id: 'fk-rumpf',
+            titel: 'Rumpf',
+            dauerMin: 8,
+            uebungen: [
+              { id: 'fk-seitstuetz', name: 'Seitstütz', sets: 3, dauerSek: 30,
+                proSeite: true, kategorie: 'Rumpf', progression: false, hinweis: '' },
+              { id: 'fk-deadbug', name: 'Dead Bug', sets: 3, reps: '8', proSeite: true,
+                kategorie: 'Rumpf', progression: false, hinweis: '' }
+            ]
+          },
+          {
+            id: 'fk-ball',
+            titel: 'Ball ohne Wand',
+            dauerMin: 15,
+            regel: 'Auf Sand springt der Ball kaum — Übungen mit Aufsetzer auf festem ' +
+                   'Boden. Wenn jemand mitspielt: flache, unregelmässige Bälle ' +
+                   'zuwerfen lassen.',
+            uebungen: [
+              { id: 'fk-anwerfen', name: 'Ball anwerfen, aufspringen lassen, aus tiefer ' +
+                      'Position stellen', sets: 1, einheit: '5 Min',
+                kategorie: 'Technik', progression: false, hervorheben: true,
+                hinweis: 'Tief SEIN bevor der Ball kommt. Ohne Wand ist der Rhythmus ' +
+                         'langsamer — genau darum geht es hier.' },
+              { id: 'fk-annahme', name: 'Tiefe Annahme und stellen als eine Bewegung',
+                sets: 1, einheit: '5 Min', kategorie: 'Technik', progression: false,
+                hinweis: 'Annehmen und stellen nicht als zwei Schritte denken.' },
+              { id: 'fk-angaben', name: 'Angaben auf ein Ziel', sets: 1, einheit: '5 Min',
+                kategorie: 'Technik', optional: true, progression: false,
+                hinweis: 'Falls Platz vorhanden.' }
+            ]
+          }
+        ]
+      }
+    }
+  },
 
   /* =============================================================
      Kopf & Spielverständnis (Abschnitt 8.7)

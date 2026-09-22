@@ -129,6 +129,11 @@
      der ausgeruhtere Tag. Mit Termin wandert der Explosivtag unter die
      Woche und der Samstag wird zur Aktivierung. */
   function explosivAmSamstag(iso) {
+    // Liegt der Samstag in den Ferien, ist er als Explosivtag keine
+    // Option — dann wandert die Einheit unter die Woche, genau wie
+    // bei einem Termin am Wochenende.
+    const samstag = D.plusTage(D.montagDer(iso || heute()), 5);
+    if (S.istFerientag(samstag)) return false;
     return !terminAmWochenende(iso);
   }
 
@@ -251,6 +256,67 @@
     return e;
   }
 
+  /* =============================================================
+     Ferien
+
+     Ein Ferientag ersetzt den Wochenplan — aber erst, nachdem die
+     Terminregeln durch sind. Wer in den Ferien ein Spiel hat, bekommt
+     den Spieltag, nicht den Strandtag.
+     ============================================================= */
+
+  /* Was steht an diesem Ferientag an?
+     null, wenn das Datum in keinen Ferienzeitraum fällt. */
+  function ferienTag(iso) {
+    const f = S.ferienFuer(iso);
+    if (!f) return null;
+    const n = D.diffTage(f.von, iso);
+
+    // Erster und letzter Tag sind Reisetage. Der letzte schlägt den
+    // Rhythmus — bei kurzen Ferien fällt beides auf denselben Tag.
+    if (n === 0 || iso === f.bis) return { zeitraum: f, index: n, art: 'reise' };
+    if (n === 1) return { zeitraum: f, index: n, art: 'frei' };
+
+    const art = P.ferien.rhythmus[n - 2];
+    return { zeitraum: f, index: n, art: art || 'frei' };
+  }
+
+  /* Der erste Strandtag eines Zeitraums — der läuft reduziert.
+     Fällt ein Rhythmus-Explosivtag auf den Reisetag am Schluss,
+     zählt er nicht mit. */
+  function ersteStrandEinheit(f) {
+    const r = P.ferien.rhythmus;
+    for (let i = 0; i < r.length; i++) {
+      if (r[i] !== 'explosiv') continue;
+      const iso = D.plusTage(f.von, i + 2);
+      if (iso > f.bis) return null;
+      if (iso === f.bis) continue;
+      return iso;
+    }
+    return null;
+  }
+
+  /* Erste Woche nach den Ferien: alles auf 80 %.
+     Gibt den Wiedereinstiegs-Block aus plan.js zurück oder null. */
+  function wiedereinstieg(iso) {
+    if (S.istFerientag(iso)) return null;
+    const f = S.letzteFerienVor(iso);
+    if (!f) return null;
+    const n = D.diffTage(f.bis, iso);
+    return (n >= 1 && n <= 7) ? P.ferien.wiedereinstieg : null;
+  }
+
+  /* Maximale Übungen auf einen Anteil herunterrechnen. Sätze werden
+     kaufmännisch gerundet, aber nie unter 1. Alles andere bleibt. */
+  function reduziereMaximale(bloecke, faktor) {
+    return bloecke.map(b => Object.assign({}, b, {
+      uebungen: (b.uebungen || []).map(u => {
+        if (!u.maximal || !u.sets || u.sets <= 1) return u;
+        const neu = Math.max(1, Math.round(u.sets * faktor));
+        return neu === u.sets ? u : Object.assign({}, u, { sets: neu, statt: u.sets });
+      })
+    }));
+  }
+
   /* Ist das der Explosivtag? Daran hängt der Treppen-Fallback. */
   function istExplosiv(plan) {
     return plan && plan.id === 'explosiv';
@@ -270,6 +336,7 @@
       return Object.assign(plan, P.termin.spieltag, {
         wt: wt, name: basis.name, typ: 'spieltag',
         titel: art.name, termin: heute, hart: true,
+        dauerMin: null,   // sonst bleibt die Dauer der ersetzten Einheit stehen
         ersetztVerein: basis.typ === 'verein'
       });
     }
@@ -280,6 +347,7 @@
     if (gestern && P.termin.typen[gestern.typ].ruhetagDanach) {
       return Object.assign(plan, {
         wt: wt, typ: 'frei', titel: 'Frei nach dem Turnier', bloecke: [], hart: false,
+        dauerMin: null,
         hinweis: P.termin.folgetag.turnier, nachTurnier: true
       });
     }
@@ -300,17 +368,51 @@
     if (flag(iso, 'gestrichen')) {
       return Object.assign(plan, {
         wt: wt, typ: 'frei', titel: 'Gestrichen', bloecke: [], hart: false, gestrichen: true,
+        dauerMin: null,
         hinweis: 'Diesen Tag hast du gestrichen, um die Woche zu entlasten.'
       });
     }
 
-    /* 5. Nach einem Termin ohne Ruhetag: regulär, aber markiert */
+    /* 5. Ferien — erst jetzt, damit Termine Vorrang behalten */
+    const fer = ferienTag(iso);
+    if (fer) {
+      const gemeinsam = { wt: wt, name: basis.name, ferien: fer };
+      if (fer.art === 'reise') {
+        return Object.assign(plan, P.ferien.reisetag, gemeinsam);
+      }
+      if (fer.art === 'frei') {
+        return Object.assign(plan, P.ferien.freierTag, gemeinsam);
+      }
+      const einheit = P.ferien.einheiten[fer.art];
+      const erste = fer.art === 'explosiv' &&
+                    iso === ersteStrandEinheit(fer.zeitraum);
+      return Object.assign(plan, einheit, gemeinsam, {
+        reduktion: erste ? P.ferien.ersteReduktion : null,
+        reduktionsGrund: erste ? P.ferien.sandHinweis : null
+      });
+    }
+
+    /* 6. Nach einem Termin ohne Ruhetag: regulär, aber markiert */
     if (gestern) {
       plan.reduziert = gestern;
       if (P.termin.typen[gestern.typ].spaet) plan.nachSpaet = gestern;
     }
 
-    /* 6. Samstag: Schwerpunkt wählen */
+    /* 7. Erste Woche nach den Ferien: Wiedereinstieg auf 80 % */
+    const wieder = wiedereinstieg(iso);
+    if (wieder && plan.typ !== 'frei') {
+      plan.wiedereinstieg = wieder;
+      if (plan.typ === 'training') {
+        plan.reduktion = wieder.reduktion;
+        plan.reduktionsGrund = wieder.text;
+      }
+    }
+
+    /* 8. Letzter Tag vor den Ferien */
+    if (S.ferienBeginnenMorgen(iso) && plan.typ !== 'frei') {
+      plan.vorFerien = P.ferien.vorFerien;
+    }
+
     plan.bloecke = plan.bloecke || [];
     return plan;
   }
@@ -400,6 +502,10 @@
     } else {
       bl = bl.filter(b => b.typ === 'video' || (b.uebungen && b.uebungen.length));
     }
+
+    // Reduziertes Volumen: erste Strandeinheit, Wiedereinstieg nach
+    // den Ferien. Betrifft nur Übungen mit maximal: true.
+    if (plan.reduktion) bl = reduziereMaximale(bl, plan.reduktion);
     return bl;
   }
 
@@ -637,11 +743,15 @@
   /* Regel 1 — Zwei-Tage-Regel fürs Training.
      Betrachtet die letzten zwei Tage MIT Inhalt vor heute. */
   function trainingZweiTageOffen(iso) {
+    // In den Ferien pausiert die Regel. Ferientage zählen auch danach
+    // nicht gegen dich — sie werden beim Zurückschauen übersprungen.
+    if (S.istFerientag(iso)) return false;
     const start = S.settings.startDatum;
     const letzte = [];
     for (let i = 1; i <= 14 && letzte.length < 2; i++) {
       const d = D.plusTage(iso, -i);
       if (start && D.diffTage(start, d) < 0) break;
+      if (S.istFerientag(d)) continue;
       const st = tagStatus(d);
       if (st === 'ruhetag') continue;
       letzte.push(st);
@@ -986,6 +1096,7 @@
       marken.push('<span class="marke marke-verfehlt">Ziel verfehlt · ' + pct(stand.wert) + '</span>');
     }
     if (alarm) marken.push('<span class="marke marke-alarm">seit 4 Wochen unverändert</span>');
+    if (u.statt) marken.push('<span class="marke">reduziert · sonst ' + u.statt + '</span>');
 
     // Zeile 2 rechts: Satzpunkte oder — bei Serien — der Stand
     let rechts = '';
@@ -1121,6 +1232,42 @@
      5. Ansichten
      ============================================================= */
 
+  /* Ferienzeiträume in den Einstellungen: Liste plus ein Formular
+     für von/bis. Bewusst ohne Namen — Datum reicht. */
+  function ferienKarte(iso) {
+    const liste = S.ferien();
+    const zeilen = liste.map(f => {
+      const tage = D.diffTage(f.von, f.bis) + 1;
+      const laeuft = f.von <= iso && iso <= f.bis;
+      const vorbei = f.bis < iso;
+      return '<li class="fr' + (vorbei ? ' fr-alt' : '') + '">' +
+        '<div class="fr-haupt">' +
+        '<span class="fr-datum">' + esc(D.formatKurz(f.von)) + ' – ' +
+        esc(D.formatKurz(f.bis)) + '</span>' +
+        '<span class="fr-wann">' + tage + ' Tage' +
+        (laeuft ? ' · läuft gerade' : vorbei ? ' · vorbei' : '') + '</span>' +
+        '</div>' +
+        '<button class="fr-weg" data-action="ferien-loeschen" data-id="' + f.id + '" ' +
+        'aria-label="Zeitraum löschen">Löschen</button>' +
+        '</li>';
+    }).join('');
+
+    return '<section class="karte"><h2 class="karte-titel">Ferien</h2>' +
+      '<p class="notiz">In diesen Zeiträumen läuft der Ferienrhythmus statt des ' +
+      'Wochenplans. Streaks und die Zwei-Tage-Regel pausieren. Termine haben ' +
+      'trotzdem Vorrang.</p>' +
+      (liste.length
+        ? '<ul class="fr-liste">' + zeilen + '</ul>'
+        : '<p class="notiz">Nichts eingetragen.</p>') +
+      '<div class="fr-form">' +
+      '<label class="feld-label">Von' +
+      '<input class="feld" type="date" data-ffeld="von" value=""></label>' +
+      '<label class="feld-label">Bis' +
+      '<input class="feld" type="date" data-ffeld="bis" value=""></label>' +
+      '<button class="btn btn-voll" data-action="ferien-speichern">Zeitraum hinzufügen</button>' +
+      '</div></section>';
+  }
+
   /* --- 5.1 Heute --------------------------------------------- */
   function viewHeute() {
     const iso = heute();
@@ -1139,12 +1286,43 @@
       (t && t.zeit ? '<span class="meta-termin">' + esc(t.zeit) + '</span>' : '') +
       (t && t.ort ? '<span class="meta-termin">' + esc(t.ort) + '</span>' : '') +
       // An freien Tagen keine Trainingszeit anzeigen — die Zeit hängt am
-      // Wochentag, nicht daran, ob überhaupt etwas ansteht.
-      (!t && zeit && plan.typ !== 'frei' ? '<span>' + esc(zeit) + '</span>' : '') +
+      // Wochentag, nicht daran, ob überhaupt etwas ansteht. In den Ferien
+      // gilt kein Wochentagsplan, also auch keine Wochentagszeit.
+      (!t && zeit && plan.typ !== 'frei' && !plan.ferien
+        ? '<span>' + esc(zeit) + '</span>' : '') +
       (plan.dauerMin ? '<span>' + plan.dauerMin + ' Min</span>' : '') +
       (istHart(iso, plan) ? '<span class="meta-hart">harter Tag' +
         (t && t.typ === 'turnier' ? ' ×2' : '') + '</span>' : '') +
       '</p></header>');
+
+    /* Ferien, Wiedereinstieg, letzter Tag davor */
+    if (plan.ferien) {
+      const f = plan.ferien.zeitraum;
+      teile.push('<div class="hinweis-box hinweis-ferien">' +
+        '<strong>Ferien · Tag ' + (plan.ferien.index + 1) + ' von ' +
+        (D.diffTage(f.von, f.bis) + 1) + '</strong>' +
+        '<span>Streaks und die Zwei-Tage-Regel pausieren. Mobilität, Abenddehnen ' +
+        'und ein paar Ballkontakte laufen als Habits weiter.</span>' +
+        '</div>');
+    }
+    if (plan.wiedereinstieg) {
+      teile.push('<div class="hinweis-box hinweis-akt">' +
+        '<strong>' + esc(plan.wiedereinstieg.titel) + '</strong>' +
+        '<span>' + esc(plan.wiedereinstieg.text) + '</span>' +
+        '</div>');
+    }
+    if (plan.vorFerien) {
+      teile.push('<div class="hinweis-box hinweis-ferien">' +
+        '<strong>Letzter Tag vor den Ferien</strong>' +
+        '<span>' + esc(plan.vorFerien) + '</span>' +
+        '</div>');
+    }
+    if (plan.reduktionsGrund && plan.reduktion && !plan.wiedereinstieg) {
+      teile.push('<div class="hinweis-box hinweis-akt">' +
+        '<strong>Heute reduziert</strong>' +
+        '<span>' + esc(plan.reduktionsGrund) + '</span>' +
+        '</div>');
+    }
 
     /* Was der Plan heute wegen eines Termins anders macht */
     if (plan.ersetztVerein) {
@@ -1464,6 +1642,11 @@
         zusatz.push('<span class="wt-termin">' +
           [p.termin.zeit, p.termin.ort].filter(Boolean).map(esc).join(' · ') + '</span>');
       }
+      const istFerien = !!p.ferien;
+      if (istFerien) zusatz.push('<span class="wt-ferien">Ferien · Tag ' +
+        (p.ferien.index + 1) + '</span>');
+      if (p.wiedereinstieg) zusatz.push('<span class="wt-akt">Wiedereinstieg 80 %</span>');
+      if (p.vorFerien) zusatz.push('<span class="wt-ferien">morgen Ferienbeginn</span>');
       if (istAkt) zusatz.push('<span class="wt-akt">Aktivierung vor dem Termin</span>');
       if (p.nachTurnier) zusatz.push('<span class="wt-akt">frei nach dem Turnier</span>');
       if (p.reduziert) zusatz.push('<span class="wt-akt">reduziert nach dem Spiel</span>');
@@ -1472,7 +1655,8 @@
       if (verfehlt) zusatz.push('<span class="wt-verfehlt">' + verfehlt + '× Ziel verfehlt</span>');
 
       return '<li class="wt' + (istHeute ? ' wt-heute' : '') +
-        (istTermin ? ' wt-istTermin' : '') + (istAkt ? ' wt-istAkt' : '') + '">' +
+        (istTermin ? ' wt-istTermin' : '') + (istAkt ? ' wt-istAkt' : '') +
+        (istFerien ? ' wt-istFerien' : '') + '">' +
         '<span class="wt-tag">' + D.KURZ[p.wt] + '</span>' +
         '<span class="wt-mitte"><span class="wt-titel">' + esc(p.titel || p.name) + '</span>' +
         zusatz.join('') + '</span>' +
@@ -1999,6 +2183,17 @@
       '<p class="kopf-datum">Woche ' + wn + ' · ' + esc(D.formatKurz(iso)) + '</p>' +
       '<h1 class="kopf-titel">Habits</h1></header>');
 
+    const ferien = S.ferienFuer(iso);
+    if (ferien) {
+      const weiter = H.liste.filter(h => h.inFerien).map(h => h.name);
+      teile.push('<div class="hinweis-box hinweis-ferien">' +
+        '<strong>Ferien bis ' + esc(D.formatKurz(ferien.bis)) + '</strong>' +
+        '<span>Streaks pausieren und brechen nicht. Täglich weiter laufen ' +
+        esc(weiter.join(', ')) + '. Der Rest ist freiwillig — abgehakt wird ' +
+        'trotzdem gezählt.</span>' +
+        '</div>');
+    }
+
     H.sichtbare(iso).forEach(x => {
       const h = x.habit;
 
@@ -2094,6 +2289,10 @@
       }
       stuecke.push('<p class="notiz">Diese Woche ' + q.erledigt + ' von ' + q.moeglich + ' Tagen.</p>');
 
+      if (h.inFerien && S.istFerientag(iso)) {
+        stuecke.push('<p class="notiz notiz-ferien">In den Ferien: ' +
+          esc(h.inFerien) + '</p>');
+      }
       if (h.hinweis) stuecke.push('<p class="hb-hinweis">' + esc(h.hinweis) + '</p>');
       if (h.notfall) stuecke.push('<p class="notiz">Minimalversion: ' + esc(h.notfall) + '</p>');
 
@@ -2461,7 +2660,16 @@
           entfalleneEinheiten(heute()).map(e => esc(e.titel)).join(', ') +
           (entfalleneEinheiten(heute()).length === 1 ? ' fällt weg.' : ' fallen weg.') + '</p>'
         : '') +
+      // Die Liste zeigt die Standardwoche. Liegen gerade Ferien, gilt
+      // sie nicht — das muss dastehen, sonst widerspricht sie der
+      // Wochenansicht.
+      (S.istFerientag(iso)
+        ? '<p class="notiz notiz-ferien">Diese Woche laufen Ferien. Der ' +
+          'Ferienrhythmus überschreibt diese Einteilung.</p>'
+        : '') +
       '</section>' +
+
+      ferienKarte(iso) +
 
       '<section class="karte"><h2 class="karte-titel">Material</h2>' +
       '<p class="notiz">Fehlt etwas, blendet die App die betroffenen Übungen aus.</p>' +
@@ -2921,6 +3129,28 @@
         if (t && confirm('Termin am ' + D.formatKurz(t.datum) + ' löschen?')) {
           S.loescheTermin(t.id);
           if (terminBearbeitet === t.id) terminBearbeitet = null;
+          render();
+        }
+        break;
+      }
+
+      /* --- Ferien --- */
+      case 'ferien-speichern': {
+        const lese = n => {
+          const f = document.querySelector('[data-ffeld="' + n + '"]');
+          return f ? f.value : '';
+        };
+        const von = lese('von'), bis = lese('bis');
+        if (!von || !bis) { alert('Bitte Anfang und Ende wählen.'); break; }
+        S.setFerien({ von: von, bis: bis });
+        render();
+        break;
+      }
+      case 'ferien-loeschen': {
+        const f = S.ferien().find(x => x.id === el.dataset.id);
+        if (f && confirm('Ferien ' + D.formatKurz(f.von) + ' – ' +
+            D.formatKurz(f.bis) + ' löschen?')) {
+          S.loescheFerien(f.id);
           render();
         }
         break;
