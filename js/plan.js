@@ -50,9 +50,22 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.8',
+  appVersion: '2.9',
 
   neuerungen: [
+    {
+      version: '2.9',
+      punkte: [
+        'Die freien Tage zwischen den Ferieneinheiten sind jetzt leichte ' +
+          'Ball-Technik-Tage, ca. 30 Min',
+        'Keine Sprünge, Sprints oder Kraftübungen an diesen Tagen — ' +
+          'du sollst danach frischer sein als vorher',
+        'Der Tag nach der zweiten Strandeinheit bleibt komplett frei, ' +
+          'Reisetage auch',
+        'Höchstens zwei harte Tage pro Ferienwoche — was darüber liegt, ' +
+          'wird zum leichten Tag'
+      ]
+    },
     {
       version: '2.8',
       punkte: [
@@ -977,8 +990,14 @@ const FB_PLAN = {
   ferien: {
 
     /* Ab dem dritten Ferientag, Index 0 = Tag 3.
-       null heisst frei. Was über das Ende hinausgeht, ist frei. */
-    rhythmus: ['kraft', null, 'explosiv', null, 'kraft', null, 'explosiv'],
+       null heisst frei. Was über das Ende hinausgeht, ist frei — darum
+       bleibt der Tag nach der zweiten Strandeinheit komplett frei.
+       Die Tage zwischen den Einheiten sind leichte Ball-Technik-Tage. */
+    rhythmus: ['kraft', 'ball', 'explosiv', 'ball', 'kraft', 'ball', 'explosiv'],
+
+    /* Mehr harte Tage als das lässt die App in einer Ferienwoche nicht
+       zu. Was darüber liegt, wird zum leichten Tag heruntergestuft. */
+    maxHartProWoche: 2,
 
     /* Die erste Strandeinheit läuft auf diesem Anteil. */
     ersteReduktion: 2 / 3,
@@ -1018,6 +1037,70 @@ const FB_PLAN = {
     vorFerien: 'Morgen Ferienbeginn — locker bleiben.',
 
     einheiten: {
+
+      /* WICHTIG: Der leichte Tag enthält bewusst KEINE Sprünge, Sprints
+         und keine Kraftübungen. Er liegt zwischen den harten Einheiten
+         und soll erholen, nicht belasten. Wer hier etwas ergänzt, prüft
+         zuerst, ob es diese Regel bricht. */
+      ball: {
+        id: 'ferien-ball',
+        titel: 'Ball-Technik',
+        typ: 'training',
+        dauerMin: 30,
+        hart: false,
+        hinweis: 'Leichter Tag — du sollst danach frischer sein als vorher. ' +
+                 'Nach Ermüdung aufhören.',
+        notfall: {
+          text: 'Nur 5 Min Ballkontakte',
+          uebungIds: ['fb-kontakte'],
+          ersetzen: { 'fb-kontakte': { einheit: '5 Min' } }
+        },
+        bloecke: [
+          {
+            id: 'fb-kontakt',
+            titel: 'Ballkontakte',
+            dauerMin: 10,
+            regel: 'Ohne Tempo. Sobald es anstrengend wird, ist der Tag vorbei.',
+            uebungen: [
+              { id: 'fb-kontakte', name: 'Ballkontakte im Stand und aus tiefer Position',
+                sets: 1, einheit: '10 Min', kategorie: 'Technik', progression: false,
+                hervorheben: true,
+                hinweis: 'Erst im Stand, dann tief. Das Gefühl für den Ball halten, ' +
+                         'nicht an der Leistung arbeiten.' }
+            ]
+          },
+          {
+            id: 'fb-zuspiel',
+            titel: 'Zuspiel ohne Wand',
+            dauerMin: 15,
+            regel: 'Auf festem Boden, nicht im Sand — sonst springt der Ball nicht.',
+            uebungen: [
+              { id: 'fb-anwerfen',
+                name: 'Ball anwerfen, aufspringen lassen, aus tiefer Position stellen',
+                sets: 1, einheit: '6 Min', kategorie: 'Technik', progression: false,
+                hinweis: 'Tief SEIN bevor der Ball kommt. Ohne Wand ist der Rhythmus ' +
+                         'langsamer — genau darum geht es hier.' },
+              { id: 'fb-annahme', name: 'Tiefe Annahme und stellen als eine Bewegung',
+                sets: 1, einheit: '5 Min', kategorie: 'Technik', progression: false,
+                hinweis: 'Annehmen und stellen nicht als zwei Schritte denken.' },
+              { id: 'fb-angaben', name: 'Angaben auf ein Ziel', sets: 1, einheit: '4 Min',
+                kategorie: 'Technik', progression: false,
+                hinweis: 'Falls Platz vorhanden. Sonst auf eine markierte Stelle.' }
+            ]
+          },
+          {
+            id: 'fb-wasser',
+            titel: 'Optional',
+            dauerMin: 5,
+            uebungen: [
+              { id: 'fb-schwimmen', name: 'Locker schwimmen', sets: 1, einheit: 'locker',
+                kategorie: 'Erholung', optional: true, progression: false,
+                hinweis: 'Locker heisst locker. Kein Kraultraining, keine Zeiten. ' +
+                         'Wenn du danach müde bist, war es zu viel.' }
+            ]
+          }
+        ]
+      },
 
       explosiv: {
         id: 'ferien-explosiv',

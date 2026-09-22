@@ -1121,27 +1121,43 @@ Voreingetragen ist **26. September bis 6. Oktober 2026**; der Eintrag darf weg.
 | 1 | Reisetag — kein Training |
 | 2 | frei |
 | 3 | Kraft mit Rucksack + Ball |
-| 4 | frei |
+| 4 | Ball-Technik (leicht) |
 | 5 | **Strand-Explosiv** — die erste läuft auf zwei Dritteln |
-| 6 | frei |
+| 6 | Ball-Technik (leicht) |
 | 7 | Kraft mit Rucksack + Ball |
-| 8 | frei |
+| 8 | Ball-Technik (leicht) |
 | 9 | Strand-Explosiv |
-| ab 10 | frei |
+| 10 | **frei** — der Tag nach der zweiten Strandeinheit |
+| ab 11 | frei |
 | letzter Tag | Reisetag — schlägt den Rhythmus |
 
 Der Rhythmus steht in `plan.js` unter `ferien.rhythmus`. `null` heisst frei, und
-was über die Liste hinausgeht, ist ebenfalls frei. Bei kurzen Ferien fällt der
-Reisetag am Schluss auf einen Rhythmustag — der Reisetag gewinnt.
+was über die Liste hinausgeht, ist ebenfalls frei — daher bleibt der Tag nach der
+zweiten Strandeinheit komplett frei. Bei kurzen Ferien fällt der Reisetag am
+Schluss auf einen Rhythmustag; der Reisetag gewinnt.
 
-### Die beiden Ferieneinheiten
+**Höchstens zwei harte Tage pro Ferienwoche.** Gezählt wird die Kalenderwoche
+Montag bis Sonntag. Käme durch einen geänderten Rhythmus eine dritte
+Strandeinheit dazu, stuft die App sie automatisch auf einen leichten Tag herunter
+statt sie stehen zu lassen. Die Obergrenze steht unter `ferien.maxHartProWoche`.
 
-| | Strand-Explosiv (35 Min) | Kraft mit Rucksack + Ball (45 Min) |
-|---|---|---|
-| Harter Tag | **ja** | nein |
-| Material | fester, feuchter Sand | Rucksack mit 4–6 Petflaschen à 1.5 l |
-| Inhalt | Aufwärmen, A-Skips, Sprints, Antritte, CMJ, seitliche Sprünge | Rudern, W-Raises, Liegestütze, Split Squats, einbeiniges Kreuzheben, Rumpf |
-| Dazu | — | Block „Ball ohne Wand", 15 Min |
+### Die drei Ferieneinheiten
+
+| | Strand-Explosiv (35 Min) | Kraft mit Rucksack + Ball (45 Min) | Ball-Technik (30 Min) |
+|---|---|---|---|
+| Harter Tag | **ja** | nein | nein |
+| Material | fester, feuchter Sand | Rucksack mit 4–6 Petflaschen à 1.5 l | fester Boden |
+| Inhalt | Aufwärmen, A-Skips, Sprints, Antritte, CMJ, seitliche Sprünge | Rudern, W-Raises, Liegestütze, Split Squats, einbeiniges Kreuzheben, Rumpf | Ballkontakte, Zuspiel ohne Wand, tiefe Annahme, Angaben |
+| Dazu | — | Block „Ball ohne Wand", 15 Min | optional locker schwimmen |
+
+**Der leichte Tag enthält bewusst keine Sprünge, Sprints und keine
+Kraftübungen.** Er liegt zwischen den harten Einheiten und soll erholen:
+*„Leichter Tag — du sollst danach frischer sein als vorher. Nach Ermüdung
+aufhören."* Wer dort etwas ergänzt, prüft zuerst, ob es diese Regel bricht.
+
+Weil der Rhythmus die Woche füllt, meldet die Wochenansicht in einer Ferienwoche
+nicht mehr „Kein freier Tag" — sie zeigt stattdessen, wie viele harte Tage von
+den erlaubten zwei schon vergeben sind.
 
 Die erste Strandeinheit läuft automatisch auf zwei Dritteln, mit dem Hinweis
 *„Sand belastet Waden und Achillessehne stärker."* Betroffen sind nur Übungen,

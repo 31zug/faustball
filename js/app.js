@@ -264,20 +264,50 @@
      den Spieltag, nicht den Strandtag.
      ============================================================= */
 
+  /* Die Art eines Ferientags direkt aus dem Rhythmus, ohne die
+     Obergrenze für harte Tage. Nur intern. */
+  function ferienRohArt(f, iso) {
+    const n = D.diffTage(f.von, iso);
+    // Erster und letzter Tag sind Reisetage. Der letzte schlägt den
+    // Rhythmus — bei kurzen Ferien fällt beides auf denselben Tag.
+    if (n === 0 || iso === f.bis) return 'reise';
+    if (n === 1) return 'frei';
+    return P.ferien.rhythmus[n - 2] || 'frei';
+  }
+
+  /* Wie viele Strandeinheiten liegen in derselben Kalenderwoche schon
+     vor diesem Tag? Gezählt wird der rohe Rhythmus, damit sich eine
+     Herabstufung nicht selbst weiterreicht. */
+  function strandVorherInWoche(f, iso) {
+    const montag = D.montagDer(iso);
+    let zahl = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = D.plusTage(montag, i);
+      if (d >= iso) break;
+      if (d < f.von || d > f.bis) continue;
+      if (ferienRohArt(f, d) === 'explosiv') zahl++;
+    }
+    return zahl;
+  }
+
   /* Was steht an diesem Ferientag an?
      null, wenn das Datum in keinen Ferienzeitraum fällt. */
   function ferienTag(iso) {
     const f = S.ferienFuer(iso);
     if (!f) return null;
     const n = D.diffTage(f.von, iso);
+    let art = ferienRohArt(f, iso);
 
-    // Erster und letzter Tag sind Reisetage. Der letzte schlägt den
-    // Rhythmus — bei kurzen Ferien fällt beides auf denselben Tag.
-    if (n === 0 || iso === f.bis) return { zeitraum: f, index: n, art: 'reise' };
-    if (n === 1) return { zeitraum: f, index: n, art: 'frei' };
+    // Höchstens zwei harte Tage pro Kalenderwoche. Was darüber liegt,
+    // wird zum leichten Tag — lieber Ball als eine dritte Strandeinheit.
+    let gedeckelt = false;
+    if (art === 'explosiv' &&
+        strandVorherInWoche(f, iso) >= P.ferien.maxHartProWoche) {
+      art = 'ball';
+      gedeckelt = true;
+    }
 
-    const art = P.ferien.rhythmus[n - 2];
-    return { zeitraum: f, index: n, art: art || 'frei' };
+    return { zeitraum: f, index: n, art: art, gedeckelt: gedeckelt };
   }
 
   /* Der erste Strandtag eines Zeitraums — der läuft reduziert.
@@ -293,6 +323,18 @@
       return iso;
     }
     return null;
+  }
+
+  /* Harte Ferientage in der Kalenderwoche von iso */
+  function harteFerientageInWoche(iso) {
+    const montag = D.montagDer(iso);
+    let zahl = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = D.plusTage(montag, i);
+      const t = ferienTag(d);
+      if (t && t.art === 'explosiv') zahl++;
+    }
+    return zahl;
   }
 
   /* Erste Woche nach den Ferien: alles auf 80 %.
@@ -1591,9 +1633,20 @@
           'alles, was du selber als hart markierst.</p>') +
       '</section>');
 
-    /* Ein Tag pro Woche komplett frei */
+    /* Ein Tag pro Woche komplett frei.
+       In einer Ferienwoche gilt die Regel nicht: Der Ferienrhythmus
+       füllt die Woche bewusst mit leichten Tagen, und «streichen»
+       wäre dort der falsche Vorschlag. */
     const frei = freieTage(iso);
-    if (!frei.length) {
+    const ferienWoche = tage.some(d => S.istFerientag(d));
+    if (!frei.length && ferienWoche) {
+      teile.push('<div class="hinweis-box hinweis-ferien">' +
+        '<strong>Kein ganz freier Tag — Ferienrhythmus</strong>' +
+        '<span>Die Tage zwischen den Strandeinheiten sind leichte Ball-Technik-Tage, ' +
+        'keine vollen Einheiten. Harte Tage diese Woche: ' +
+        harteFerientageInWoche(iso) + ' von höchstens ' + P.ferien.maxHartProWoche + '.</span>' +
+        '</div>');
+    } else if (!frei.length) {
       const streich = streichVorschlag(iso);
       teile.push('<div class="warnung">' +
         '<strong>Kein freier Tag diese Woche</strong>' +
