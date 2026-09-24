@@ -50,9 +50,23 @@ const FB_PLAN = {
      Liste einmal an. Neue Version: Nummer erhöhen und oben in
      "neuerungen" einen Eintrag ergänzen.
      ============================================================= */
-  appVersion: '2.9',
+  appVersion: '3.0',
 
   neuerungen: [
+    {
+      version: '3.0',
+      punkte: [
+        'Neu: Phasen. Der bisherige Plan läuft als Phase «Aufbau» bis 11.10.2026 ' +
+          'unverändert weiter',
+        'Ab 12.10.2026 gilt die «Hallensaison 2026/27» mit festem Wochenplan: ' +
+          'Mo/Di/Do Verein, Mi Technik, Fr Oberkörper, Sa Ballgefühl + Explosiv',
+        'Vereinstrainings sind farblich von den eigenen Einheiten getrennt',
+        'Neuer Termintyp «Hallentraining» für die gemeinsamen Samstage',
+        'Am Freitag vor einem Spieltag bleibt die Oberkörpereinheit stehen — ' +
+          'nur leichter, statt durch eine Aktivierung ersetzt',
+        'Alle Spieltage und Hallentrainings der Saison sind eingetragen'
+      ]
+    },
     {
       version: '2.9',
       punkte: [
@@ -897,7 +911,14 @@ const FB_PLAN = {
       turnier:      { name: 'Tagesturnier', hartWert: 2,
                       kurz: 'mehrere Spiele am Tag', ruhetagDanach: true },
       abendturnier: { name: 'Abendturnier', hartWert: 1.5,
-                      kurz: 'z. B. 19:00–22:00', spaet: true }
+                      kurz: 'z. B. 19:00–22:00', spaet: true },
+      /* Gemeinsames Vereinstraining ausserhalb der normalen Tage.
+         verein: true  → wird wie ein Vereinstraining behandelt und
+                         angezeigt, nicht wie ein Spieltag.
+         keineAktivierung → der Tag davor bleibt, wie er ist. */
+      hallentraining: { name: 'Hallentraining', hartWert: 1,
+                        kurz: 'gemeinsames Training im Verein',
+                        verein: true, keineAktivierung: true }
     },
 
     /* Der Tag vor einem Termin */
@@ -954,7 +975,8 @@ const FB_PLAN = {
       einzelspiel: 'Bei Müdigkeit nur Ziehen und Rumpf, Drücken weglassen.',
       turnier: 'Nach einem Tagesturnier ist der Folgetag frei. Kein "nur kurz noch".',
       abendturnier: 'Eine geplante Zusatzeinheit läuft heute automatisch in der ' +
-                    'Minimalversion. Das Vereinstraining bleibt unverändert.'
+                    'Minimalversion. Das Vereinstraining bleibt unverändert.',
+      hallentraining: 'Nach dem gemeinsamen Training läuft der Plan normal weiter.'
     },
 
     /* Hinweis nach einem späten Wettkampf — am Termintag selber und
@@ -1251,6 +1273,169 @@ const FB_PLAN = {
       }
     }
   },
+
+  /* =============================================================
+     Phasen.
+
+     Eine Phase beschreibt, wie eine Woche in einem Zeitraum aussieht.
+     Sie LÖSCHT nichts — sie ordnet die Einheiten von oben nur anders
+     an. Deine Häkchen, Gewichte und Quoten hängen an den Übungs-IDs
+     und laufen darum über Phasengrenzen hinweg weiter.
+
+     modus: 'verteilt'  Die App verteilt die Einheiten selber auf die
+                        freien Wochentage, Vereinstage kommen aus den
+                        Einstellungen. So lief der Plan bisher.
+     modus: 'fest'      Der Wochenplan steht Wochentag für Wochentag
+                        fest. Die Vereinstage aus den Einstellungen
+                        gelten dann nicht — die Phase bestimmt sie.
+
+     von und bis zählen mit. von: null heisst "seit jeher",
+     bis: null heisst "bis auf weiteres".
+     ============================================================= */
+  phasen: [
+    {
+      id: 'aufbau',
+      name: 'Aufbau',
+      von: null,
+      bis: '2026-10-11',
+      modus: 'verteilt'
+    },
+
+    {
+      id: 'halle-2627',
+      name: 'Hallensaison 2026/27',
+      von: '2026-10-12',
+      bis: '2027-04-11',
+      modus: 'fest',
+
+      /* 1 = Montag … 7 = Sonntag.
+         'verein' und 'frei' sind eingebaut, alles andere ist ein
+         Schlüssel aus einheiten weiter unten. */
+      wochenplan: {
+        1: 'verein',
+        2: 'verein',
+        3: 'halle-technik',
+        4: 'verein',
+        5: 'halle-oberkoerper',
+        6: 'halle-samstag',
+        7: 'frei'
+      },
+
+      vereinTitel: {
+        1: 'Verein — 3fach-Halle',
+        2: 'Verein — 3fach-Halle',
+        4: 'Verein — Kleinhalle'
+      },
+      vereinHinweis: {
+        4: 'Kleinhalle: Sprint und Kraft, dazu etwas Ballschule. ' +
+           'Das Vereinstraining ist die Einheit — nichts Zusätzliches.'
+      },
+
+      zeiten: {
+        1: '20:15–22:00',
+        2: '20:15–22:00',
+        3: '',
+        4: '20:45–22:00',
+        5: 'ab 18:00',
+        6: '',
+        7: ''
+      },
+
+      /* In der Halle bleibt der Freitag die Oberkörpereinheit, auch wenn
+         am Samstag ein Spiel ansteht — nur leichter. Darum wird der
+         Vortag hier NICHT zur Aktivierung umgebaut. */
+      aktivierungVorTermin: false,
+      vorTerminHinweis: 'Morgen Spieltag — Oberkörper heute nur leicht. ' +
+                        'Gewicht runter, Sätze kürzen. Am Spieltag willst du ' +
+                        'frische Arme, keinen Muskelkater.',
+
+      folgetagHinweis: 'Nach einem Spieltag wird nichts auf den Sonntag ' +
+                       'nachgeholt. Der Sonntag bleibt frei.',
+
+      /* Diese Einheiten bauen auf den Blöcken von oben auf.
+         bloeckeAus  Block-IDs, in dieser Reihenfolge. Die IDs sind
+                     planweit eindeutig, die App findet sie selber.
+         blockAnpassung  überschreibt einzelne Felder eines Blocks,
+                     ohne das Original anzufassen. */
+      einheiten: {
+
+        'halle-technik': {
+          id: 'halle-technik',
+          titel: 'Technik',
+          typ: 'training',
+          dauerMin: 45,
+          hart: false,
+          hinweis: 'Hauptblock ist die Präzision mit Trefferzählung. Davor die ' +
+                   'tiefe Position einschleifen. In der Halle hast du eine ' +
+                   'richtige Wand — nutze sie.',
+          bloeckeAus: ['fr-position', 'fr-wand'],
+          notfall: {
+            text: '30 Zuspiele auf den Punkt',
+            uebungIds: ['fr-zuspiele'],
+            ersetzen: { 'fr-zuspiele': { einheit: '30 Stück', zielVersuche: 30 } }
+          }
+        },
+
+        'halle-oberkoerper': {
+          id: 'halle-oberkoerper',
+          titel: 'Oberkörper',
+          typ: 'training',
+          dauerMin: 90,
+          hart: false,
+          hinweis: 'Anderthalb Stunden heissen nicht mehr Übungen, sondern volle ' +
+                   'Pausen: 2–3 Min zwischen den schweren Sätzen. Wer durchhetzt, ' +
+                   'trainiert Ausdauer statt Kraft. Zum Schluss die Schulterpflege.',
+          bloeckeAus: ['mo-ziehen', 'mo-druecken', 'mo-arme', 'mo-rumpf', 'fr-schulter'],
+          blockAnpassung: {
+            'fr-schulter': {
+              untertitel: 'zum Schluss, locker',
+              regel: 'Nach der Krafteinheit, nicht davor. Locker, nicht bis zur Ermüdung.'
+            }
+          },
+          notfall: {
+            text: 'Nur Ziehen und Rumpf',
+            kategorien: ['Ziehen', 'Rumpf']
+          }
+        },
+
+        'halle-samstag': {
+          id: 'halle-samstag',
+          titel: 'Ballgefühl + Explosiv',
+          typ: 'training',
+          dauerMin: 65,
+          hart: true,
+          // Der Treppen-Fallback und die Mobilitäts-Pflicht hängen daran
+          explosivTag: true,
+          hinweis: 'Kurz den Ball spüren, dann die Explosiveinheit. Das Ballgefühl ' +
+                   'ist das Aufwärmen, kein Techniktraining — nicht ausdehnen.',
+          bloeckeAus: ['fb-kontakt', 'mi-leiter', 'mi-hinweg', 'mi-treppe',
+                       'mi-rueckweg', 'mi-sprung-zuhause', 'mi-beinkraft'],
+          blockAnpassung: {
+            'fb-kontakt': {
+              titel: 'Ballgefühl kurz',
+              dauerMin: 10,
+              regel: 'Locker, 10–15 Min. Danach kommt die Explosiveinheit — ' +
+                     'hier nichts verbrauchen.'
+            }
+          },
+          notfall: {
+            text: 'Ballgefühl und Sprünge zuhause',
+            kategorien: ['Technik', 'Sprung']
+          }
+        }
+      },
+
+      /* Nur Notizzettel. Die Planlogik fasst das nicht an. */
+      merkposten: [
+        {
+          titel: 'Trainingslager Ostern 2027',
+          text: 'Möglicherweise Mittwoch oder Donnerstag bis Sonntag über Ostern. ' +
+                'Noch nicht bestätigt — nichts eingeplant. Sobald es steht, als ' +
+                'Ferienzeitraum oder als Termine eintragen.'
+        }
+      ]
+    }
+  ],
 
   /* =============================================================
      Kopf & Spielverständnis (Abschnitt 8.7)

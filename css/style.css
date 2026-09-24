@@ -2273,3 +2273,46 @@ body.im-setup .update-balken { bottom: calc(12px + env(safe-area-inset-bottom, 0
   border-radius: var(--r-s);
 }
 .fr-form { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+
+/* =============================================================
+   Vereinstraining sichtbar von eigenen Einheiten trennen.
+
+   Bewusst KEINE siebte Signalfarbe: Die sechs bestehenden stehen
+   für Status und Termine. Verein bekommt eine gedämpfte Spur —
+   erkennbar, aber ohne im Wochenraster zu schreien.
+   ============================================================= */
+.wt-istVerein .wt-tag {
+  border-color: var(--linie);
+  color: var(--dim);
+  background: rgba(147, 161, 179, .10);
+}
+.wt-istVerein .wt-titel { color: var(--dim); }
+.wt-verein {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 2px;
+}
+.ruhig-verein { border-left: 3px solid var(--linie); }
+.hinweis-verein { border-left-color: var(--dim); background: rgba(147, 161, 179, .10); }
+.hinweis-verein strong { color: var(--dim); }
+
+/* Vorgemerkt, aber nicht eingeplant */
+.merk {
+  border: 1px dashed var(--linie);
+  border-radius: var(--r-s);
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+.merk strong { display: block; font-size: 13.5px; font-weight: 700; }
+.merk p { font-size: 12.5px; color: var(--dim); line-height: 1.5; margin-top: 4px; }
+.phasen-zeile {
+  font-size: 12.5px;
+  color: var(--dim);
+  margin-bottom: 12px;
+}
+.phasen-zeile strong { color: var(--text); font-weight: 680; }
+.phasen-bis { color: var(--faint); }

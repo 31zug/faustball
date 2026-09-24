@@ -130,7 +130,7 @@ const FB_STORE = {
      Für "war dieses Feld vorher da?" musst du in roh schauen —
      in state hat der Standardwert die Lücke schon gefüllt.
      ============================================================= */
-  SCHEMA_VERSION: 3,
+  SCHEMA_VERSION: 5,
 
   MIGRATIONEN: [
     {
@@ -160,6 +160,61 @@ const FB_STORE = {
         (state.feedback || []).forEach(e => {
           if (e.tag === 'athletik') e.tag = 'explosiv';
         });
+      }
+    },
+    {
+      version: 4,
+      was: 'Die Termine der Hallensaison 2026/27 sind eingetragen',
+      lauf: function (state) {
+        /* Spieltage und gemeinsame Hallentrainings. Ein Datum, an dem
+           schon ein Termin steht, wird NICHT überschrieben — was du
+           selber eingetragen hast, gilt.
+
+           Der 23.01.2027 wäre auch ein Hallentraining, ist aber als
+           Spieltag eingetragen: Der Spieltag hat Vorrang, und pro Tag
+           gibt es nur einen Termin. */
+        const neu = [
+          { datum: '2026-11-14', typ: 'einzelspiel',    ort: '' },
+          { datum: '2026-11-21', typ: 'einzelspiel',    ort: 'Aushilfe 2. Mannschaft' },
+          { datum: '2026-11-28', typ: 'hallentraining', zeit: '09:30', ort: 'gemeinsam, bis 11:30' },
+          { datum: '2026-12-12', typ: 'einzelspiel',    ort: '' },
+          { datum: '2026-12-19', typ: 'hallentraining', zeit: '09:30', ort: 'gemeinsam, bis 11:30' },
+          { datum: '2027-01-17', typ: 'einzelspiel',    ort: 'Strengelbach, 2. Mannschaft' },
+          { datum: '2027-01-23', typ: 'einzelspiel',    ort: '' },
+          { datum: '2027-02-13', typ: 'hallentraining', zeit: '09:30', ort: 'gemeinsam, bis 11:30' },
+          { datum: '2027-02-20', typ: 'einzelspiel',    ort: '' },
+          { datum: '2027-03-06', typ: 'hallentraining', zeit: '09:30', ort: 'gemeinsam, bis 11:30' },
+          { datum: '2027-03-20', typ: 'hallentraining', zeit: '09:30', ort: 'gemeinsam, bis 11:30' }
+        ];
+        if (!Array.isArray(state.termine)) state.termine = [];
+        neu.forEach(function (t, i) {
+          if (state.termine.some(function (x) { return x.datum === t.datum; })) return;
+          state.termine.push({
+            id: 'halle-' + t.datum,
+            datum: t.datum,
+            typ: t.typ,
+            zeit: t.zeit || '',
+            ort: t.ort || ''
+          });
+        });
+      }
+    },
+    {
+      version: 5,
+      was: 'Trainingszeiten folgen jetzt der Phase, ausser du hast sie selber gesetzt',
+      lauf: function (state) {
+        /* Bisher hat die App beim ersten Start eine volle Kopie von
+           FB_PLAN.zeiten in die Einstellungen geschrieben. Damit hätte
+           keine Phase je eine eigene Zeit setzen können. Ab jetzt stehen
+           dort nur noch echte Abweichungen — alles, was dem Planwert
+           entspricht, fliegt raus. Selber geänderte Zeiten bleiben. */
+        const z = state.settings && state.settings.zeiten;
+        if (!z) return;
+        const rest = {};
+        Object.keys(z).forEach(function (wt) {
+          if (z[wt] !== FB_PLAN.zeiten[wt]) rest[wt] = z[wt];
+        });
+        state.settings.zeiten = Object.keys(rest).length ? rest : null;
       }
     }
   ],
@@ -242,10 +297,6 @@ const FB_STORE = {
     // Beim allerersten Start: heutiges Datum als Planstart setzen
     if (!this.state.settings.startDatum) {
       this.state.settings.startDatum = FB_DATUM.heute();
-      this.speichern('settings');
-    }
-    if (!this.state.settings.zeiten) {
-      this.state.settings.zeiten = Object.assign({}, FB_PLAN.zeiten);
       this.speichern('settings');
     }
   },
@@ -422,9 +473,12 @@ const FB_STORE = {
     this.speichern('settings');
   },
 
-  zeitFuer(wochentag) {
-    const z = this.state.settings.zeiten || FB_PLAN.zeiten;
-    return z[wochentag] || '';
+  /* Nur die selber gesetzte Zeit eines Wochentags, sonst null.
+     Was ohne eigene Zeit gilt, entscheidet die Phase — das rechnet
+     app.js aus, nicht der Speicher. */
+  eigeneZeit(wochentag) {
+    const z = this.state.settings.zeiten;
+    return z && z[wochentag] != null ? z[wochentag] : null;
   },
 
   /* --- Tagesdaten -------------------------------------------- */
@@ -907,7 +961,6 @@ const FB_STORE = {
     }
     // Sicherstellen, dass die Pflichtfelder wieder da sind
     if (!this.state.settings.startDatum) this.state.settings.startDatum = FB_DATUM.heute();
-    if (!this.state.settings.zeiten) this.state.settings.zeiten = Object.assign({}, FB_PLAN.zeiten);
     this.speichern('settings');
     return { ok: true };
   },
@@ -920,7 +973,6 @@ const FB_STORE = {
       this.state[bereich] = this.kopie(this.STANDARD[bereich]);
     }
     this.state.settings.startDatum = FB_DATUM.heute();
-    this.state.settings.zeiten = Object.assign({}, FB_PLAN.zeiten);
     for (const bereich in this.KEYS) this.speichern(bereich);
   },
 

@@ -1108,6 +1108,81 @@ Die Übungen unter `aktivierung` und `spieltag` bearbeitest du wie alle anderen.
 
 ---
 
+## Phasen
+
+Der Plan kennt Zeitabschnitte mit unterschiedlichem Wochenaufbau. Die Liste steht
+in `plan.js` unter `phasen`, die Wochenansicht zeigt oben, welche gerade läuft.
+
+| Phase | Zeitraum | Modus |
+|---|---|---|
+| Aufbau | bis 11.10.2026 | `verteilt` |
+| Hallensaison 2026/27 | 12.10.2026 – 11.04.2027 | `fest` |
+
+**`modus: 'verteilt'`** ist der ursprüngliche Betrieb: Die App verteilt
+`P.einheiten` selber auf die freien Wochentage, Vereinstage kommen aus den
+Einstellungen.
+
+**`modus: 'fest'`** legt den Wochenplan Tag für Tag fest. Die Vereinstags-Knöpfe
+in den Einstellungen gelten dann nicht — die Phase bestimmt sie. Die App sagt das
+dort auch an, statt die Knöpfe stumm wirkungslos zu lassen.
+
+**Es wird nichts kopiert.** Eine Phaseneinheit listet unter `bloeckeAus` nur
+Block-IDs auf, die schon woanders im Plan stehen; die App sucht sie zur Laufzeit.
+Block-IDs sind planweit eindeutig, darum reicht die ID ohne Angabe der Einheit.
+Übungs-IDs bleiben damit dieselben — Häkchen, Gewichte und Quoten laufen über
+Phasengrenzen hinweg weiter. `blockAnpassung` überschreibt einzelne Felder eines
+übernommenen Blocks, ohne das Original anzufassen.
+
+### Hallensaison 2026/27
+
+| Tag | | Zeit |
+|---|---|---|
+| Mo | Verein — 3fach-Halle | 20:15–22:00 |
+| Di | Verein — 3fach-Halle | 20:15–22:00 |
+| Mi | Technik (45 Min) | — |
+| Do | Verein — Kleinhalle | 20:45–22:00 |
+| Fr | Oberkörper (90 Min) | ab 18:00 |
+| Sa | Ballgefühl + Explosiv (65 Min) | — |
+| So | frei | — |
+
+**Vier harte Tage pro Woche** — Mo, Di, Do und Samstag. Das ist die Obergrenze
+der App. An Spieltagssamstagen ersetzt das Spiel den Explosivtag, es bleibt bei
+vier. Ein zusätzlich von Hand als hart markierter Tag löst die Warnung aus.
+
+**Der Freitag vor einem Spieltag bleibt die Oberkörpereinheit** und wird nicht
+durch eine Aktivierung ersetzt. Dafür steht `aktivierungVorTermin: false` auf der
+Phase, dazu der Hinweis aus `vorTerminHinweis`. Nach einem Spieltag wird nichts
+auf den Sonntag nachgeholt; der Text steht unter `folgetagHinweis`.
+
+**Vereinstrainings sind visuell getrennt**: gedämpfte Kachel, Titel in Grau und
+ein Chip «Verein» in der Wochenübersicht. Bewusst keine siebte Signalfarbe — die
+sechs bestehenden sind für Status und Termine reserviert.
+
+### Termintyp «Hallentraining»
+
+Für die gemeinsamen Samstage 09:30–11:30. Er zählt als harter Tag wie ein
+Vereinstraining, zeigt aber die ruhige Vereinsansicht mit «Training besucht?»
+statt Fokusfeld und Auslaufen. `keineAktivierung: true` sorgt dafür, dass der
+Vortag unangetastet bleibt.
+
+Die eigene Samstagseinheit fällt an diesen Tagen weg und wird **nicht
+verschoben** — die App verschiebt grundsätzlich nichts.
+
+### Trainingszeiten und Phasen
+
+Die Zeiten kommen aus der Phase (`phase.zeiten`), sonst aus `P.zeiten`. In den
+Einstellungen gespeichert wird nur, was du selber abweichend einträgst. Tippst du
+den Phasenwert wieder ein, verschwindet die Abweichung und die Phase greift
+erneut.
+
+### Vorgemerkt
+
+`phase.merkposten` ist ein reiner Notizzettel — er erscheint in der Terminansicht
+unter «Vorgemerkt» und die Planlogik fasst ihn nicht an. Dort steht das mögliche
+Trainingslager über Ostern 2027.
+
+---
+
 ## Ferien
 
 Unter *Einstellungen → Ferien* trägst du Zeiträume mit Von- und Bis-Datum ein.

@@ -106,6 +106,86 @@
      wiegt schwerer als die Vorbereitung auf den nächsten Termin. */
 
   /* =============================================================
+     Phasen
+
+     Welche Phase gilt an einem Datum? Die erste, deren Zeitraum passt.
+     Ohne Treffer läuft alles wie vor den Phasen — der Plan bleibt
+     benutzbar, auch wenn jemand die Liste leert.
+     ============================================================= */
+  function phaseFuer(iso) {
+    const datum = iso || heute();
+    const liste = P.phasen || [];
+    return liste.find(f =>
+      (!f.von || f.von <= datum) && (!f.bis || datum <= f.bis)) || null;
+  }
+
+  /* Läuft an diesem Datum ein fester Wochenplan? */
+  function festePhase(iso) {
+    const f = phaseFuer(iso);
+    return f && f.modus === 'fest' ? f : null;
+  }
+
+  /* Einen Block irgendwo im Plan finden. Block-IDs sind planweit
+     eindeutig, darum reicht die ID ohne Angabe der Einheit. */
+  function blockSuchen(id) {
+    const quellen = P.einheiten.slice();
+    quellen.push(P.ballsession, P.termin.aktivierung, P.termin.spieltag);
+    Object.keys(P.ferien.einheiten).forEach(k => quellen.push(P.ferien.einheiten[k]));
+    for (let i = 0; i < quellen.length; i++) {
+      const b = (quellen[i].bloecke || []).find(x => x.id === id);
+      if (b) return b;
+    }
+    return null;
+  }
+
+  /* Eine Phaseneinheit auflösen: Sie besteht aus Blöcken, die schon
+     woanders im Plan stehen. Kopiert wird nichts — die Übungs-IDs
+     bleiben dieselben, damit die Historie weiterläuft. */
+  function phasenEinheit(def) {
+    if (!def) return null;
+    if (!def.bloeckeAus) return def;
+    const anpassung = def.blockAnpassung || {};
+    const bloecke = def.bloeckeAus
+      .map(id => blockSuchen(id))
+      .filter(Boolean)
+      .map(b => anpassung[b.id] ? Object.assign({}, b, anpassung[b.id]) : b);
+    return Object.assign({}, def, { bloecke: bloecke });
+  }
+
+  /* Der Tagesplan einer festen Phase, vor allen Terminregeln. */
+  function festerTag(f, wt) {
+    const key = f.wochenplan ? f.wochenplan[wt] : null;
+
+    if (key === 'verein') {
+      const v = Object.assign({}, P.verein);
+      if (f.vereinTitel && f.vereinTitel[wt]) v.titel = f.vereinTitel[wt];
+      if (f.vereinHinweis && f.vereinHinweis[wt]) v.hinweis = f.vereinHinweis[wt];
+      return v;
+    }
+    if (!key || key === 'frei') {
+      return P.wochenende[wt] || P.wochenende[7];
+    }
+    const e = phasenEinheit(f.einheiten && f.einheiten[key]);
+    return e || { id: 'leer', typ: 'frei', titel: 'Frei', bloecke: [], hart: false,
+                  dauerMin: null, hinweis: 'Kein Training geplant.' };
+  }
+
+  /* Die Trainingszeit eines Tages. Eine eigene Zeit aus den
+     Einstellungen schlägt die Phase, die Phase schlägt plan.zeiten. */
+  function zeitFuerTag(iso, wt) {
+    const eigen = S.eigeneZeit(wt);
+    if (eigen != null) return eigen;
+    return phasenZeit(iso, wt);
+  }
+
+  /* Die Zeit, die ohne eigene Eingabe gilt */
+  function phasenZeit(iso, wt) {
+    const f = phaseFuer(iso);
+    if (f && f.zeiten && f.zeiten[wt] != null) return f.zeiten[wt];
+    return P.zeiten[wt] || '';
+  }
+
+  /* =============================================================
      Einheiten auf Wochentage verteilen
 
      Frei sind alle Wochentage Mo–Fr, die kein Vereinstag sind.
@@ -140,6 +220,12 @@
   /* Welcher Tag ist diese Woche der Explosivtag? Gibt den Wochentag
      zurück oder null, wenn die Einheit mangels Platz wegfällt. */
   function explosivTag(iso) {
+    const fest = festePhase(iso || heute());
+    if (fest) {
+      const treffer = [1, 2, 3, 4, 5, 6, 7]
+        .find(wt => istExplosiv(festerTag(fest, wt)));
+      return treffer || null;
+    }
     if (explosivAmSamstag(iso)) return 6;
     const karte = verteilung(iso);
     const treffer = Object.keys(karte).find(wt => karte[wt].id === 'explosiv');
@@ -212,6 +298,8 @@
      fällt planmässig weg — das ist gewollt und kein Problem der
      Einstellungen, also wird dort auch nicht davor gewarnt. */
   function entfalleneEinheiten(iso) {
+    // Feste Phase: Der Wochenplan steht, es fällt nichts weg.
+    if (festePhase(iso || heute())) return [];
     const karte = verteilung(iso || heute(), true);
     const belegt = Object.keys(karte).map(k => karte[k].id);
     belegt.push('explosiv');
@@ -221,6 +309,11 @@
   /* Was steht an diesem Wochentag grundsätzlich an? */
   function basisFuerTag(wt, iso) {
     const datum = iso || heute();
+
+    // Feste Phase: Der Wochenplan der Phase entscheidet, nicht die
+    // Vereinstage aus den Einstellungen und nicht die Verteilung.
+    const fest = festePhase(datum);
+    if (fest) return festerTag(fest, wt);
 
     if (S.istVereinTag(wt)) {
       const v = Object.assign({}, P.verein);
@@ -361,7 +454,9 @@
 
   /* Ist das der Explosivtag? Daran hängt der Treppen-Fallback. */
   function istExplosiv(plan) {
-    return plan && plan.id === 'explosiv';
+    // explosivTag setzen Phaseneinheiten, die die Explosivblöcke
+    // übernehmen — daran hängen Treppen-Fallback und Mobilitätspflicht.
+    return !!plan && (plan.id === 'explosiv' || plan.explosivTag === true);
   }
   function tagesPlan(iso) {
     const wt = D.wochentag(iso);
@@ -375,11 +470,27 @@
     /* 1. Termintag — ersetzt alles, auch das Vereinstraining */
     if (heute) {
       const art = P.termin.typen[heute.typ];
+
+      // Vereinsartige Termine (gemeinsames Hallentraining) sind keine
+      // Spieltage: kein Fokusfeld, kein Auslaufen — nur abhaken wie
+      // beim normalen Vereinstraining.
+      if (art.verein) {
+        return Object.assign(plan, {
+          wt: wt, name: basis.name, typ: 'verein',
+          id: 'verein', titel: art.name, termin: heute, hart: true,
+          bloecke: [], dauerMin: null,
+          hinweis: 'Gemeinsames Training im Verein. Deine eigene Einheit von ' +
+                   'heute fällt weg und wird nicht verschoben.',
+          ersetztEigenes: basis.typ === 'training'
+        });
+      }
+
       return Object.assign(plan, P.termin.spieltag, {
         wt: wt, name: basis.name, typ: 'spieltag',
         titel: art.name, termin: heute, hart: true,
         dauerMin: null,   // sonst bleibt die Dauer der ersetzten Einheit stehen
-        ersetztVerein: basis.typ === 'verein'
+        ersetztVerein: basis.typ === 'verein',
+        ersetztEigenes: basis.typ === 'training'
       });
     }
 
@@ -397,13 +508,30 @@
     /* 3. Tag vor einem Termin: Aktivierung — aber nur, wenn dort
           überhaupt eine Zusatzeinheit geplant war. Ein Vereinstraining
           bleibt bestehen, ein freier Tag bleibt frei. Sonst würde die
-          Aktivierung einen Ruhetag in eine Einheit verwandeln. */
+          Aktivierung einen Ruhetag in eine Einheit verwandeln.
+
+          Phasen können das abschalten: In der Hallensaison bleibt der
+          Freitag die Oberkörpereinheit und wird nur leichter gemacht,
+          statt durch eine Aktivierung ersetzt zu werden. Vereinsartige
+          Termine lösen ohnehin nie eine Aktivierung aus. */
+    const phase = phaseFuer(iso);
+    const aktivierungAus = (phase && phase.aktivierungVorTermin === false) ||
+      (morgen && P.termin.typen[morgen.typ].keineAktivierung);
+
     // Samstag darf zur Aktivierung werden, auch wenn dort nichts geplant war —
     // der designierte Ruhetag ist der Sonntag.
-    if (morgen && (basis.typ === 'training' || wt === 6)) {
+    if (morgen && !aktivierungAus && (basis.typ === 'training' || wt === 6)) {
       return Object.assign(plan, P.termin.aktivierung, {
         wt: wt, name: basis.name, typ: 'aktivierung', hart: false, vorTermin: morgen
       });
+    }
+
+    // Keine Aktivierung, aber morgen ist trotzdem ein Termin: Die
+    // Einheit bleibt stehen und bekommt einen Hinweis.
+    if (morgen && basis.typ === 'training' && phase && phase.vorTerminHinweis &&
+        !P.termin.typen[morgen.typ].verein) {
+      plan.vorTerminLeicht = phase.vorTerminHinweis;
+      plan.vorTermin = morgen;
     }
 
     /* 4. Von Hand gestrichen, um die Woche zu entlasten */
@@ -438,6 +566,10 @@
     if (gestern) {
       plan.reduziert = gestern;
       if (P.termin.typen[gestern.typ].spaet) plan.nachSpaet = gestern;
+      // In der Halle wird nach einem Spieltag nichts nachgeholt
+      if (phase && phase.folgetagHinweis && plan.typ === 'frei') {
+        plan.folgetagHinweis = phase.folgetagHinweis;
+      }
     }
 
     /* 7. Erste Woche nach den Ferien: Wiedereinstieg auf 80 % */
@@ -1316,7 +1448,7 @@
     const plan = tagesPlan(iso);
     const bl = aktiveBloecke(iso, plan);
     const notfall = notfallAn(iso);
-    const zeit = S.zeitFuer(plan.wt);
+    const zeit = zeitFuerTag(iso, plan.wt);
     const teile = [];
 
     /* Kopf. An Termintagen zählt die Uhrzeit des Termins, nicht die Trainingszeit. */
@@ -1373,10 +1505,21 @@
         '<span>Der Termin ersetzt das Training — es kommt nicht zusätzlich dazu.</span>' +
         '</div>');
     }
-    if (plan.vorTermin) {
+    if (plan.vorTerminLeicht) {
+      teile.push('<div class="hinweis-box hinweis-reduziert">' +
+        '<strong>Morgen ' + esc(P.termin.typen[plan.vorTermin.typ].name) + '</strong>' +
+        '<span>' + esc(plan.vorTerminLeicht) + '</span>' +
+        '</div>');
+    } else if (plan.vorTermin) {
       teile.push('<div class="hinweis-box hinweis-akt">' +
         '<strong>Morgen ' + esc(P.termin.typen[plan.vorTermin.typ].name) + '</strong>' +
         '<span>Darum heute nur Aktivierung statt der regulären Einheit.</span>' +
+        '</div>');
+    }
+    if (plan.ersetztEigenes && plan.typ === 'verein') {
+      teile.push('<div class="hinweis-box hinweis-verein">' +
+        '<strong>Eigene Einheit fällt weg</strong>' +
+        '<span>Sie wird nicht verschoben und nicht nachgeholt.</span>' +
         '</div>');
     }
     if (plan.nachTurnier) {
@@ -1466,8 +1609,11 @@
     /* Vereinstraining: ruhige Ansicht */
     if (plan.typ === 'verein') {
       const besucht = flag(iso, 'verein');
-      teile.push('<section class="ruhig">' +
-        '<p class="ruhig-text">Heute steht nichts Zusätzliches an. Das Vereinstraining ist die Einheit.</p>' +
+      teile.push('<section class="ruhig ruhig-verein">' +
+        '<p class="ruhig-text">' +
+        esc(plan.hinweis ||
+            'Heute steht nichts Zusätzliches an. Das Vereinstraining ist die Einheit.') +
+        '</p>' +
         '<button class="gross-btn' + (besucht ? ' gross-btn-an' : '') + '" data-action="verein">' +
         (besucht ? 'Training besucht' : 'Training besucht?') + '</button>' +
         '</section>');
@@ -1480,6 +1626,8 @@
       teile.push('<section class="ruhig">' +
         '<p class="ruhig-gross">Frei</p>' +
         '<p class="ruhig-text">' + esc(plan.hinweis || 'Der freie Tag ist Teil des Plans.') + '</p>' +
+        (plan.folgetagHinweis
+          ? '<p class="ruhig-text">' + esc(plan.folgetagHinweis) + '</p>' : '') +
         (plan.gestrichen
           ? '<button class="gross-btn" data-action="streichen" data-datum="' + iso + '">' +
             'Streichung rückgängig machen</button>'
@@ -1572,6 +1720,14 @@
       '<h1 class="kopf-titel">' + esc(D.formatKurz(montag)) + ' – ' + esc(D.formatKurz(tage[6])) + '</h1>' +
       '</header>');
 
+    /* In welcher Phase läuft diese Woche? */
+    const ph = phaseFuer(iso);
+    if (ph && (P.phasen || []).length > 1) {
+      teile.push('<p class="phasen-zeile">Phase: <strong>' + esc(ph.name) + '</strong>' +
+        (ph.bis ? ' <span class="phasen-bis">bis ' + esc(D.formatKurz(ph.bis)) +
+          '</span>' : '') + '</p>');
+    }
+
     /* Termine der Woche */
     const wochenTermine = tage.map(d => S.terminAm(d)).filter(Boolean);
     teile.push('<section class="karte">' +
@@ -1590,19 +1746,26 @@
       '</section>');
 
     /* Welcher Tag ist diese Woche der Explosivtag? */
+    const festeWoche = festePhase(iso);
     const exWt = explosivTag(iso);
     teile.push('<section class="karte explosiv-karte">' +
       '<div class="fk-kopf"><h2 class="karte-titel">Explosivtag</h2>' +
       '<span class="fk-pos">einer pro Woche</span></div>' +
       (exWt
         ? '<p class="ex-tag">' + esc(D.NAMEN[exWt]) + '</p>' +
-          '<p class="notiz">' + (exWt === 6
-            ? 'Kein Termin am Wochenende — der Samstag ist der ausgeruhtere Tag.'
-            : 'Termin am Wochenende, darum unter der Woche. Der Samstag wird zur ' +
-              'Aktivierung.') + '</p>'
+          '<p class="notiz">' + (festeWoche
+            ? 'Fester Wochenplan — der Explosivtag wandert nicht. Ein Termin an ' +
+              'dem Tag ersetzt ihn, ohne ihn zu verschieben.'
+            : exWt === 6
+              ? 'Kein Termin am Wochenende — der Samstag ist der ausgeruhtere Tag.'
+              : 'Termin am Wochenende, darum unter der Woche. Der Samstag wird zur ' +
+                'Aktivierung.') + '</p>'
         : '<p class="ex-tag ex-weg">fällt aus</p>' +
-          '<p class="notiz notiz-warn">Zu wenige freie Tage. Mehr Vereinstage ' +
-          'bedeuten weniger Platz für Zusatzeinheiten.</p>') +
+          '<p class="notiz' + (festeWoche ? '' : ' notiz-warn') + '">' + (festeWoche
+            ? 'Diese Woche steht im festen Plan kein Explosivtag — ein Termin ' +
+              'ersetzt ihn.'
+            : 'Zu wenige freie Tage. Mehr Vereinstage bedeuten weniger Platz für ' +
+              'Zusatzeinheiten.') + '</p>') +
       '</section>');
 
     /* Fokus dieser Woche */
@@ -1629,7 +1792,7 @@
             : '<p class="notiz">Alle Zusatzeinheiten sind bereits reduziert. Was übrig bleibt, ' +
               'sind Vereinstraining und Termine — daran ändert die App nichts.</p>')
         : '<p class="notiz">Tagesturnier zählt 2, Abendturnier 1.5, Einzelspiel 1, ' +
-          'der Aktivierungstag davor 0. Dazu Vereinstraining, Mittwoch-Athletik und ' +
+          'der Aktivierungstag davor 0. Dazu Vereinstraining, der Explosivtag und ' +
           'alles, was du selber als hart markierst.</p>') +
       '</section>');
 
@@ -1695,9 +1858,15 @@
         zusatz.push('<span class="wt-termin">' +
           [p.termin.zeit, p.termin.ort].filter(Boolean).map(esc).join(' · ') + '</span>');
       }
+      const istVerein = p.typ === 'verein';
       const istFerien = !!p.ferien;
+      if (istVerein) zusatz.push('<span class="wt-verein">Verein' +
+        (p.termin && p.termin.zeit ? ' · ' + esc(p.termin.zeit) : '') +
+        (p.termin && p.termin.ort ? ' · ' + esc(p.termin.ort) : '') + '</span>');
       if (istFerien) zusatz.push('<span class="wt-ferien">Ferien · Tag ' +
         (p.ferien.index + 1) + '</span>');
+      if (p.vorTerminLeicht) zusatz.push('<span class="wt-akt">morgen ' +
+        esc(P.termin.typen[p.vorTermin.typ].name) + ' — heute leicht</span>');
       if (p.wiedereinstieg) zusatz.push('<span class="wt-akt">Wiedereinstieg 80 %</span>');
       if (p.vorFerien) zusatz.push('<span class="wt-ferien">morgen Ferienbeginn</span>');
       if (istAkt) zusatz.push('<span class="wt-akt">Aktivierung vor dem Termin</span>');
@@ -1709,7 +1878,7 @@
 
       return '<li class="wt' + (istHeute ? ' wt-heute' : '') +
         (istTermin ? ' wt-istTermin' : '') + (istAkt ? ' wt-istAkt' : '') +
-        (istFerien ? ' wt-istFerien' : '') + '">' +
+        (istFerien ? ' wt-istFerien' : '') + (istVerein ? ' wt-istVerein' : '') + '">' +
         '<span class="wt-tag">' + D.KURZ[p.wt] + '</span>' +
         '<span class="wt-mitte"><span class="wt-titel">' + esc(p.titel || p.name) + '</span>' +
         zusatz.join('') + '</span>' +
@@ -1846,6 +2015,16 @@
         ? '<ul class="tm-liste">' + kommend.map(t => terminZeile(t, iso)).join('') + '</ul>'
         : '<p class="notiz">Nichts eingetragen. Ohne Termin läuft die Woche nach dem Standardplan.</p>') +
       '</section>');
+
+    const phase = phaseFuer(iso);
+    if (phase && phase.merkposten && phase.merkposten.length) {
+      teile.push('<section class="karte">' +
+        '<h2 class="karte-titel">Vorgemerkt</h2>' +
+        '<p class="notiz">Noch nichts eingeplant — die App rechnet damit nicht.</p>' +
+        phase.merkposten.map(m => '<div class="merk"><strong>' + esc(m.titel) + '</strong>' +
+          '<p>' + esc(m.text) + '</p></div>').join('') +
+        '</section>');
+    }
 
     if (vergangen.length) {
       teile.push('<section class="karte">' +
@@ -2682,7 +2861,10 @@
   function viewEinstellungen() {
     const iso = heute();
     const st = S.settings;
-    const zeiten = st.zeiten || P.zeiten;
+    // Gezeigt wird immer die Zeit, die heute gilt: eigene vor Phase
+    // vor Plan. Was hier steht, stimmt darum mit der Tagesansicht überein.
+    const zeiten = {};
+    [1, 2, 3, 4, 5, 6, 7].forEach(wt => { zeiten[wt] = zeitFuerTag(iso, wt); });
     const zeitFelder = [1, 2, 3, 4, 5].map(wt =>
       '<label class="zeit-zeile"><span>' + D.NAMEN[wt] + '</span>' +
       '<input class="feld feld-klein" type="text" data-zeit="' + wt + '" value="' + esc(zeiten[wt] || '') + '"></label>'
@@ -2713,9 +2895,14 @@
           entfalleneEinheiten(heute()).map(e => esc(e.titel)).join(', ') +
           (entfalleneEinheiten(heute()).length === 1 ? ' fällt weg.' : ' fallen weg.') + '</p>'
         : '') +
-      // Die Liste zeigt die Standardwoche. Liegen gerade Ferien, gilt
-      // sie nicht — das muss dastehen, sonst widerspricht sie der
-      // Wochenansicht.
+      // Die Liste zeigt die Standardwoche. Liegen gerade Ferien oder läuft
+      // eine feste Phase, gilt sie nicht — das muss dastehen, sonst
+      // widerspricht sie der Wochenansicht.
+      (festePhase(iso)
+        ? '<p class="notiz notiz-warn">Während «' + esc(festePhase(iso).name) +
+          '» gelten diese Knöpfe nicht. Der Wochenplan der Phase steht fest ' +
+          'und bestimmt auch die Vereinstage.</p>'
+        : '') +
       (S.istFerientag(iso)
         ? '<p class="notiz notiz-ferien">Diese Woche laufen Ferien. Der ' +
           'Ferienrhythmus überschreibt diese Einteilung.</p>'
@@ -3435,9 +3622,13 @@
       S.setSetting('hantelKg', el.value === '' ? null : Number(el.value));
     }
     if (el.dataset.zeit) {
+      // Gespeichert wird nur, was von der Phase abweicht. Sonst würde
+      // eine einmal getippte Zeit alle späteren Phasen überstimmen.
+      const wt = el.dataset.zeit;
       const z = Object.assign({}, S.settings.zeiten);
-      z[el.dataset.zeit] = el.value;
-      S.setSetting('zeiten', z);
+      if (el.value === phasenZeit(heute(), wt)) delete z[wt];
+      else z[wt] = el.value;
+      S.setSetting('zeiten', Object.keys(z).length ? z : null);
     }
     if (el.id === 'importdatei' && el.files && el.files[0]) {
       importDatei(el.files[0]);
